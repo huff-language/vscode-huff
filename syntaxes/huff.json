@@ -1,0 +1,186 @@
+{
+  "fileTypes": ["huff"],
+  "name": "Huff",
+  "patterns": [
+    { "include": "#natspec" },
+    { "include": "#comment" },
+    { "include": "#number" },
+    { "include": "#declaration" },
+    { "include": "#control" },
+    { "include": "#macro-call" },
+    { "include": "#opcodes" }
+  ],
+  "repository": {
+    "natspec": {
+      "patterns": [
+        {
+          "begin": "/\\*\\*",
+          "end": "\\*/",
+          "name": "comment.block.documentation.huff",
+          "patterns": [
+            { "include": "#natspec-tags" }
+          ]
+        },
+        {
+          "begin": "///",
+          "end": "$",
+          "name": "comment.block.documentation.huff",
+          "patterns": [
+            { "include": "#natspec-tags" }
+          ]
+        }
+      ]
+    },
+    "natspec-tags": {
+      "patterns": [
+        { "include": "#natspec-tag-title" },
+        { "include": "#natspec-tag-author" },
+        { "include": "#natspec-tag-notice" },
+        { "include": "#natspec-tag-dev" },
+        { "include": "#natspec-tag-param" },
+        { "include": "#natspec-tag-return" }
+      ]
+    },
+    "natspec-tag-title": {
+      "match": "(@title)\\b",
+      "name": "storage.type.title.natspec"
+    },
+    "natspec-tag-author": {
+      "match": "(@author)\\b",
+      "name": "storage.type.author.natspec"
+    },
+    "natspec-tag-notice": {
+      "match": "(@notice)\\b",
+      "name": "storage.type.dev.natspec"
+    },
+    "natspec-tag-dev": {
+      "match": "(@dev)\\b",
+      "name": "storage.type.dev.natspec"
+    },
+    "natspec-tag-param": {
+      "match": "(@param)(\\s+([A-Za-z_]\\w*))?\\b",
+      "captures": {
+        "1": { "name": "storage.type.param.natspec" },
+        "3": { "name": "variable.other.natspec" }
+      }
+    },
+    "natspec-tag-return": {
+      "match": "(@return)\\b",
+      "name": "storage.type.return.natspec"
+    },
+    "comment": {
+      "patterns": [
+        { "include": "#comment-line" },
+        { "include": "#comment-block" }
+      ]
+    },
+    "comment-line": {
+      "match": "(?<!tp:)//.*?$",
+      "name": "comment.line.huff"
+    },
+    "comment-block": {
+      "begin": "/\\*",
+      "end": "\\*/",
+      "name": "comment.block.huff"
+    },
+    "control": {
+      "patterns": [{ "include": "#control-import" }]
+    },
+    "control-import": {
+      "match": "(#include)\\b",
+      "captures": {
+        "1": { "name": "keyword.control.import.huff" }
+      }
+    },
+    "number": {
+      "patterns": [
+        { "include": "#number-decimal" },
+        { "include": "#number-hex" }
+      ]
+    },
+    "number-decimal": {
+      "match": "\\b(\\d+(\\.\\d+)?)\\b",
+      "name": "constant.numeric.decimal.huff"
+    },
+    "number-hex": {
+      "match": "\\b(0[xX][a-fA-F0-9]+)\\b",
+      "name": "constant.numeric.hexadecimal.huff"
+    },
+    "declaration": {
+      "patterns": [
+        { "include": "#declaration-macro" },
+        { "include": "#declaration-jumptable" },
+        { "include": "#declaration-jumptable-packed" }
+      ]
+    },
+    "declaration-macro": {
+      "match": "(#define\\s+macro)(\\s+([A-Za-z_]\\w*))\\b(\\s+=\\s+((takes)\\s*(\\((\\d+)\\)))(\\s+(returns)\\s*(\\((\\d+)\\))))?",
+      "captures": {
+        "1": { "name": "storage.macro.huff" },
+        "3": { "name": "entity.name.function.huff" },
+        "6": { "name": "storage.takes.huff" },
+        "8": { "name": "constant.numeric.decimal.huff" },
+        "10": { "name": "storage.returns.huff" },
+        "12": { "name": "constant.numeric.decimal.huff" }
+      }
+    },
+    "declaration-jumptable": {
+      "match": "(#define\\s+jumptable)(\\s+([A-Za-z_]\\w*))\\b",
+      "captures": {
+        "1": { "name": "storage.macro.huff" },
+        "3": { "name": "entity.name.function.huff" }
+      }
+    },
+    "declaration-jumptable-packed": {
+      "match": "(#define\\s+jumptable__packed)(\\s+([A-Za-z_]\\w*))\\b",
+      "captures": {
+        "1": { "name": "storage.macro.huff" },
+        "3": { "name": "entity.name.function.huff" }
+      }
+    },
+    "opcodes": {
+      "patterns": [
+        { "include": "#opcodes-stop" },
+        { "include": "#opcodes-calculation" },
+        { "include": "#opcodes-stack" },
+        { "include": "#opcodes-io" },
+        { "include": "#opcodes-side-effects" }
+      ]
+    },
+    "opcodes-io": {
+      "match": "\\b(sstore|sload|mstore8|mstore|mload|pop|msize|balance|address|returndatacopy|returndatasize|extcodecopy|extcodesize|gasprice|caller|origin|gaslimit|difficulty|number|timestamp|coinbase|blockhash|codecopy|codesize|calldatacopy|calldatasize|calldataload|callvalue|gas)\\b",
+      "captures": {
+        "1": { "name": "entity.name.function.inputs.huff" }
+      }
+    },
+    "opcodes-side-effects": {
+      "match": "\\b(log4|log3|log2|log1|log0|jumpdest|getpc|jumpi|jump|create2|staticcall|delegatecall|callcode|call|create)\\b",
+      "captures": {
+        "1": { "name": "support.type.sideeffects.huff" }
+      }
+    },
+    "opcodes-calculation": {
+      "match": "\\b(not|xor|or|and|ror|rol|sar|shr|shl|keccak|sha3|byte|iszero|eq|sgt|slt|gt|lt|signextend|exp|mulmod|addmod|smod|mod|sdiv|div|sub|mul|add)\\b",
+      "captures": {
+        "1": { "name": "keyword.operator.arithmetic.huff" }
+      }
+    },
+    "opcodes-stop": {
+      "match": "\\b(selfdestruct|invalid|revert|return|stop)\\b",
+      "name": "support.type.exception.huff"
+    },
+    "opcodes-stack": {
+      "match": "\\b(dup16|dup15|dup14|dup13|dup12|dup11|dup10|dup9|dup8|dup7|dup6|dup5|dup4|dup3|dup2|dup1|swap16|swap15|swap14|swap13|swap12|swap11|swap10|swap9|swap8|swap7|swap6|swap5|swap4|swap3|swap2|swap1|push32|push31|push30|push29|push28|push27|push26|push25|push24|push23|push22|push21|push20|push19|push18|push17|push16|push15|push14|push13|push12|push11|push10|push9|push8|push7|push6|push5|push4|push3|push2|push1)\\b",
+      "name": "variable.other.push.huff"
+    },
+    "macro-call": {
+      "match": "\\b([A-Za-z_]\\w*)\\s*\\(",
+      "captures": {
+        "1": {
+          "name": "entity.name.function.huff"
+        }
+      }
+    }
+  },
+  "scopeName": "source.huff"
+}

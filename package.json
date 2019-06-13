@@ -1,0 +1,35 @@
+{
+  "name": "huff",
+  "displayName": "huff",
+  "description": "VSCode support for huff programming language.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.35.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "huff",
+        "aliases": [
+          "Huff",
+          "huff"
+        ],
+        "extensions": [
+          ".huff",
+          ".Huff"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "huff",
+        "scopeName": "source.huff",
+        "path": "./syntaxes/huff.json"
+      }
+    ]
+  }
+}
