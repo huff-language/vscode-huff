@@ -1,8 +1,23 @@
 {
   "name": "huff",
-  "displayName": "huff",
-  "description": "VSCode support for huff programming language.",
   "version": "0.0.1",
+  "displayName": "huff",
+  "description": "VSCode syntax highlighting for huff programming language.",
+  "keywords": [
+      "ethereum",
+      "huff"
+  ],
+  "publisher": "d1ll0n",
+  "contributors": [
+    "Dillon Kellar"
+  ],
+  "bugs": {
+    "url": "https://github.com/d1ll0n/vscode-huff/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/d1ll0n/vscode-huff"
+  },
   "engines": {
     "vscode": "^1.35.0"
   },
@@ -18,8 +33,7 @@
           "huff"
         ],
         "extensions": [
-          ".huff",
-          ".Huff"
+          ".huff"
         ],
         "configuration": "./language-configuration.json"
       }
