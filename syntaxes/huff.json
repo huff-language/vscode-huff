@@ -110,7 +110,8 @@
       "patterns": [
         { "include": "#declaration-macro" },
         { "include": "#declaration-jumptable" },
-        { "include": "#declaration-jumptable-packed" }
+        { "include": "#declaration-jumptable-packed" },
+        { "include": "#predeclaration-template" }
       ]
     },
     "declaration-macro": {
@@ -138,13 +139,21 @@
         "3": { "name": "entity.name.function.huff" }
       }
     },
+    "predeclaration-template": {
+      "match": "((template)\\s+\\<\\s*((([A-Za-z0-9_]+)(\\s*,\\s*))*([A-Za-z0-9_]+))\\s*\\>)",
+      "captures": {
+        "2": { "name": "keyword.control.huff" },
+        "3": { "name": "variable.parameter" }
+      }
+    },
     "opcodes": {
       "patterns": [
         { "include": "#opcodes-stop" },
         { "include": "#opcodes-calculation" },
         { "include": "#opcodes-stack" },
         { "include": "#opcodes-io" },
-        { "include": "#opcodes-side-effects" }
+        { "include": "#opcodes-side-effects" },
+        { "include": "#template-parameter-call" }
       ]
     },
     "opcodes-io": {
@@ -170,15 +179,19 @@
       "name": "support.type.exception.huff"
     },
     "opcodes-stack": {
-      "match": "\\b(dup16|dup15|dup14|dup13|dup12|dup11|dup10|dup9|dup8|dup7|dup6|dup5|dup4|dup3|dup2|dup1|swap16|swap15|swap14|swap13|swap12|swap11|swap10|swap9|swap8|swap7|swap6|swap5|swap4|swap3|swap2|swap1|push32|push31|push30|push29|push28|push27|push26|push25|push24|push23|push22|push21|push20|push19|push18|push17|push16|push15|push14|push13|push12|push11|push10|push9|push8|push7|push6|push5|push4|push3|push2|push1)\\b",
+      "match": "\\b((swap1|dup1)[0-6]|(swap|dup)[1-9]|push3[0-2]|push[1-2][0-9]|push[1-9])\\b",
       "name": "variable.other.push.huff"
     },
+    "template-parameter-call": {
+        "match": "\\<\\s*[A-Za-z0-9_]+\\s*\\>",
+        "name": "variable.parameter"
+    },
     "macro-call": {
-      "match": "\\b([A-Za-z_]\\w*)\\s*\\(",
+      "match": "(\\b([A-Za-z_]\\w*)\\s*)((\\<)\\s*((([A-Za-z_]\\w*)(\\s*,\\s*))*([A-Za-z_]\\w*))\\s*(\\>))?(\\()",
       "captures": {
-        "1": {
-          "name": "entity.name.function.huff"
-        }
+        "1": { "name": "entity.name.function.huff" },
+        "2": { "name": "entity.name.function.huff" },
+        "5": { "name": "variable.parameter"}
       }
     }
   },
