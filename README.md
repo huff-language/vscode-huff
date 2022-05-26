@@ -1,3 +1,3 @@
-# huff README
+# vscode-huff README
 
-Syntax highlighting for huff programming language.
+Syntax highlighting in VSCode for the Huff assembly language.
