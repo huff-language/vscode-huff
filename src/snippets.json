@@ -1,0 +1,466 @@
+{
+    "macro": {
+        "prefix": ["macro", "#define-macro"],
+        "body": ["#define macro ${1:name} = takes(${2:takes}) returns(${3:returns}) {\n\t${4:body}\n}"],
+        "description": "Macro syntax shortcut"
+    },
+    "storage": {
+        "prefix": ["storage", "new-storage"],
+        "body": ["#define constant ${1:StorageName} = FREE_STORAGE_POINTER()"],
+        "description": "Define a new storage variable with the new storage pointer"
+    },
+    "constant": {
+        "prefix": ["constant"],
+        "body": ["#define constant ${1:ConstantNem} = ${2:Value}"],
+        "description": "Define a new constant"
+    },
+    "function": {
+        "prefix": ["function"],
+        "body": ["#define function ${1:name}(${2:args}) ${3:extensions} ${4:returns} (${5:returnType})"],
+        "description": "Define a new interface function"
+    },
+    "stop": {
+        "prefix": "stop",
+        "body": "stop"
+      },
+      "add": {
+        "prefix": "add",
+        "body": "add"
+      },
+      "mul": {
+        "prefix": "mul",
+        "body": "mul"
+      },
+      "sub": {
+        "prefix": "sub",
+        "body": "sub"
+      },
+      "div": {
+        "prefix": "div",
+        "body": "div"
+      },
+      "sdiv": {
+        "prefix": "sdiv",
+        "body": "sdiv"
+      },
+      "mod": {
+        "prefix": "mod",
+        "body": "mod"
+      },
+      "smod": {
+        "prefix": "smod",
+        "body": "smod"
+      },
+      "addmod": {
+        "prefix": "addmod",
+        "body": "addmod"
+      },
+      "mulmod": {
+        "prefix": "mulmod",
+        "body": "mulmod"
+      },
+      "exp": {
+        "prefix": "exp",
+        "body": "exp"
+      },
+      "signextend": {
+        "prefix": "signextend",
+        "body": "signextend"
+      },
+      "lt": {
+        "prefix": "lt",
+        "body": "lt"
+      },
+      "gt": {
+        "prefix": "gt",
+        "body": "gt"
+      },
+      "slt": {
+        "prefix": "slt",
+        "body": "slt"
+      },
+      "sgt": {
+        "prefix": "sgt",
+        "body": "sgt"
+      },
+      "eq": {
+        "prefix": "eq",
+        "body": "eq"
+      },
+      "iszero": {
+        "prefix": "iszero",
+        "body": "iszero"
+      },
+      "and": {
+        "prefix": "and",
+        "body": "and"
+      },
+      "or": {
+        "prefix": "or",
+        "body": "or"
+      },
+      "xor": {
+        "prefix": "xor",
+        "body": "xor"
+      },
+      "not": {
+        "prefix": "not",
+        "body": "not"
+      },
+      "byte": {
+        "prefix": "byte",
+        "body": "byte"
+      },
+      "shl": {
+        "prefix": "shl",
+        "body": "shl"
+      },
+      "shr": {
+        "prefix": "shr",
+        "body": "shr"
+      },
+      "sar": {
+        "prefix": "sar",
+        "body": "sar"
+      },
+      "keccak256": {
+        "prefix": "keccak256",
+        "body": "keccak256"
+      },
+      "address": {
+        "prefix": "address",
+        "body": "address"
+      },
+      "balance": {
+        "prefix": "balance",
+        "body": "balance"
+      },
+      "origin": {
+        "prefix": "origin",
+        "body": "origin"
+      },
+      "caller": {
+        "prefix": "caller",
+        "body": "caller"
+      },
+      "callvalue": {
+        "prefix": "callvalue",
+        "body": "callvalue"
+      },
+      "calldataload": {
+        "prefix": "calldataload",
+        "body": "calldataload"
+      },
+      "calldatasize": {
+        "prefix": "calldatasize",
+        "body": "calldatasize"
+      },
+      "calldatacopy": {
+        "prefix": "calldatacopy",
+        "body": "calldatacopy"
+      },
+      "codesize": {
+        "prefix": "codesize",
+        "body": "codesize"
+      },
+      "codecopy": {
+        "prefix": "codecopy",
+        "body": "codecopy"
+      },
+      "gasprice": {
+        "prefix": "gasprice",
+        "body": "gasprice"
+      },
+      "extcodesize": {
+        "prefix": "extcodesize",
+        "body": "extcodesize"
+      },
+      "extcodecopy": {
+        "prefix": "extcodecopy",
+        "body": "extcodecopy"
+      },
+      "returndatasize": {
+        "prefix": "returndatasize",
+        "body": "returndatasize"
+      },
+      "returndatacopy": {
+        "prefix": "returndatacopy",
+        "body": "returndatacopy"
+      },
+      "extcodehash": {
+        "prefix": "extcodehash",
+        "body": "extcodehash"
+      },
+      "blockhash": {
+        "prefix": "blockhash",
+        "body": "blockhash"
+      },
+      "coinbase": {
+        "prefix": "coinbase",
+        "body": "coinbase"
+      },
+      "timestamp": {
+        "prefix": "timestamp",
+        "body": "timestamp"
+      },
+      "number": {
+        "prefix": "number",
+        "body": "number"
+      },
+      "difficulty": {
+        "prefix": "difficulty",
+        "body": "difficulty"
+      },
+      "gaslimit": {
+        "prefix": "gaslimit",
+        "body": "gaslimit"
+      },
+      "chainid": {
+        "prefix": "chainid",
+        "body": "chainid"
+      },
+      "selfbalance": {
+        "prefix": "selfbalance",
+        "body": "selfbalance"
+      },
+      "basefee": {
+        "prefix": "basefee",
+        "body": "basefee"
+      },
+      "pop": {
+        "prefix": "pop",
+        "body": "pop"
+      },
+      "mload": {
+        "prefix": "mload",
+        "body": "mload"
+      },
+      "mstore": {
+        "prefix": "mstore",
+        "body": "mstore"
+      },
+      "mstore8": {
+        "prefix": "mstore8",
+        "body": "mstore8"
+      },
+      "sload": {
+        "prefix": "sload",
+        "body": "sload"
+      },
+      "sstore": {
+        "prefix": "sstore",
+        "body": "sstore"
+      },
+      "jump": {
+        "prefix": "jump",
+        "body": "jump"
+      },
+      "jumpi": {
+        "prefix": "jumpi",
+        "body": "jumpi"
+      },
+      "pc": {
+        "prefix": "pc",
+        "body": "pc"
+      },
+      "msize": {
+        "prefix": "msize",
+        "body": "msize"
+      },
+      "gas": {
+        "prefix": "gas",
+        "body": "gas"
+      },
+      "jumpdest": {
+        "prefix": "jumpdest",
+        "body": "jumpdest"
+      },
+      "dup1": {
+        "prefix": "dup1",
+        "body": "dup1"
+      },
+      "dup2": {
+        "prefix": "dup2",
+        "body": "dup2"
+      },
+      "dup3": {
+        "prefix": "dup3",
+        "body": "dup3"
+      },
+      "dup4": {
+        "prefix": "dup4",
+        "body": "dup4"
+      },
+      "dup5": {
+        "prefix": "dup5",
+        "body": "dup5"
+      },
+      "dup6": {
+        "prefix": "dup6",
+        "body": "dup6"
+      },
+      "dup7": {
+        "prefix": "dup7",
+        "body": "dup7"
+      },
+      "dup8": {
+        "prefix": "dup8",
+        "body": "dup8"
+      },
+      "dup9": {
+        "prefix": "dup9",
+        "body": "dup9"
+      },
+      "dup10": {
+        "prefix": "dup10",
+        "body": "dup10"
+      },
+      "dup11": {
+        "prefix": "dup11",
+        "body": "dup11"
+      },
+      "dup12": {
+        "prefix": "dup12",
+        "body": "dup12"
+      },
+      "dup13": {
+        "prefix": "dup13",
+        "body": "dup13"
+      },
+      "dup14": {
+        "prefix": "dup14",
+        "body": "dup14"
+      },
+      "dup15": {
+        "prefix": "dup15",
+        "body": "dup15"
+      },
+      "dup16": {
+        "prefix": "dup16",
+        "body": "dup16"
+      },
+      "swap1": {
+        "prefix": "swap1",
+        "body": "swap1"
+      },
+      "swap2": {
+        "prefix": "swap2",
+        "body": "swap2"
+      },
+      "swap3": {
+        "prefix": "swap3",
+        "body": "swap3"
+      },
+      "swap4": {
+        "prefix": "swap4",
+        "body": "swap4"
+      },
+      "swap5": {
+        "prefix": "swap5",
+        "body": "swap5"
+      },
+      "swap6": {
+        "prefix": "swap6",
+        "body": "swap6"
+      },
+      "swap7": {
+        "prefix": "swap7",
+        "body": "swap7"
+      },
+      "swap8": {
+        "prefix": "swap8",
+        "body": "swap8"
+      },
+      "swap9": {
+        "prefix": "swap9",
+        "body": "swap9"
+      },
+      "swap10": {
+        "prefix": "swap10",
+        "body": "swap10"
+      },
+      "swap11": {
+        "prefix": "swap11",
+        "body": "swap11"
+      },
+      "swap12": {
+        "prefix": "swap12",
+        "body": "swap12"
+      },
+      "swap13": {
+        "prefix": "swap13",
+        "body": "swap13"
+      },
+      "swap14": {
+        "prefix": "swap14",
+        "body": "swap14"
+      },
+      "swap15": {
+        "prefix": "swap15",
+        "body": "swap15"
+      },
+      "swap16": {
+        "prefix": "swap16",
+        "body": "swap16"
+      },
+      "log0": {
+        "prefix": "log0",
+        "body": "log0"
+      },
+      "log1": {
+        "prefix": "log1",
+        "body": "log1"
+      },
+      "log2": {
+        "prefix": "log2",
+        "body": "log2"
+      },
+      "log3": {
+        "prefix": "log3",
+        "body": "log3"
+      },
+      "log4": {
+        "prefix": "log4",
+        "body": "log4"
+      },
+      "create": {
+        "prefix": "create",
+        "body": "create"
+      },
+      "call": {
+        "prefix": "call",
+        "body": "call"
+      },
+      "callcode": {
+        "prefix": "callcode",
+        "body": "callcode"
+      },
+      "return": {
+        "prefix": "return",
+        "body": "return"
+      },
+      "delegatecall": {
+        "prefix": "delegatecall",
+        "body": "delegatecall"
+      },
+      "create2": {
+        "prefix": "create2",
+        "body": "create2"
+      },
+      "staticcall": {
+        "prefix": "staticcall",
+        "body": "staticcall"
+      },
+      "revert": {
+        "prefix": "revert",
+        "body": "revert"
+      },
+      "invalid": {
+        "prefix": "invalid",
+        "body": "invalid"
+      },
+      "selfdestruct": {
+        "prefix": "selfdestruct",
+        "body": "selfdestruct"
+      }
+}
