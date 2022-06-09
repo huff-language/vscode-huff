@@ -118,6 +118,7 @@
     "interface": {
       "patterns": [
         { "include": "#interface-function"},
+        { "include": "#interface-event"},
         { "include": "#interface-constant"},
         { "include": "#interface-primitives"},
         { "include": "#interface-extensions"}
@@ -134,11 +135,20 @@
       }
     },
 
+    "interface-event": {
+      "match": "(#define\\s+event)(\\s+([A-Za-z_]\\w*))\\b",
+      "captures": {
+        "1": { "name": "storage.event.huff" },
+        "3": { "name": "entity.name.function.huff"},
+        "8": { "name": "keyword.modifier.huff"}
+      }
+    },
+
     "interface-constant": {
       "match": "(#define\\s+constant)(\\s+([A-Za-z_]\\w*))\\b",
       "captures": {
         "1": {"name": "storage.constant.huff"},
-        "3": {"name": "entity.name.constant.huff"}
+        "3": {"name": "constant.name.huff"}
       }
     },
 
