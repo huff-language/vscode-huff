@@ -25,6 +25,12 @@
     "Programming Languages"
   ],
   "contributes": {
+    "snippets": [
+      {
+        "language": "huff",
+        "path": "./src/snippets.json"
+      }
+    ],
     "languages": [
       {
         "id": "huff",
