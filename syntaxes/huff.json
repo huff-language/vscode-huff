@@ -9,7 +9,8 @@
     { "include": "#interface"},
     { "include": "#control" },
     { "include": "#macro-call" },
-    { "include": "#opcodes" }
+    { "include": "#opcodes" },
+    { "include": "#constant"}
   ],
   "repository": {
     "natspec": {
@@ -114,59 +115,7 @@
         { "include": "#declaration-jumptable-packed" },
         { "include": "#predeclaration-template" }
       ]
-    },
-    "interface": {
-      "patterns": [
-        { "include": "#interface-function"},
-        { "include": "#interface-event"},
-        { "include": "#interface-constant"},
-        { "include": "#interface-primitives"},
-        { "include": "#interface-extensions"}
-      ]
-    },
-
-
-    "interface-function": {
-      "match": "(#define\\s+function)(\\s+([A-Za-z_]\\w*))\\b",
-      "captures": {
-        "1": { "name": "storage.function.huff" },
-        "3": { "name": "entity.name.function.huff"},
-        "8": { "name": "keyword.modifier.huff"}
-      }
-    },
-
-    "interface-event": {
-      "match": "(#define\\s+event)(\\s+([A-Za-z_]\\w*))\\b",
-      "captures": {
-        "1": { "name": "storage.event.huff" },
-        "3": { "name": "entity.name.function.huff"},
-        "8": { "name": "keyword.modifier.huff"}
-      }
-    },
-
-    "interface-constant": {
-      "match": "(#define\\s+constant)(\\s+([A-Za-z_]\\w*))\\b",
-      "captures": {
-        "1": {"name": "storage.constant.huff"},
-        "3": {"name": "constant.name.huff"}
-      }
-    },
-
-    "interface-primitives": {
-      "match": "\\b(address|string\\d*|bytes\\d*|int\\d*|uint\\d*|bool|hash\\d*)\\b",
-      "captures": {
-        "1": { "name": "variable.parameter" }
-      }
-    },
-
-    "interface-extensions": {
-      "match": "\\b(nonpayable|view|returns)\\b",
-      "captures": {
-        "1": { "name": "storage.type.interface.huff"}
-      }
-    },
-    
-    
+    },    
     "declaration-macro": {
       "match": "(#define\\s+macro)(\\s+([A-Za-z_]\\w*))\\b(\\s+=\\s+((takes)\\s*(\\((\\d+)\\)))(\\s+(returns)\\s*(\\((\\d+)\\))))?",
       "captures": {
@@ -192,6 +141,44 @@
         "3": { "name": "entity.name.function.huff" }
       }
     },
+
+    "interface": {
+      "patterns": [
+        { "include": "#interface-function"},
+        { "include": "#interface-event"},
+        { "include": "#interface-primitives"},
+        { "include": "#interface-extensions"}
+      ]
+    },
+    "interface-function": {
+      "match": "(#define\\s+function)(\\s+([A-Za-z_]\\w*))\\b",
+      "captures": {
+        "1": { "name": "storage.function.huff" },
+        "3": { "name": "entity.name.function.huff"},
+        "8": { "name": "keyword.modifier.huff"}
+      }
+    },
+    "interface-event": {
+      "match": "(#define\\s+event)(\\s+([A-Za-z_]\\w*))\\b",
+      "captures": {
+        "1": { "name": "storage.event.huff" },
+        "3": { "name": "entity.name.function.huff"},
+        "8": { "name": "keyword.modifier.huff"}
+      }
+    },
+    "interface-primitives": {
+      "match": "\\b(address|string\\d*|bytes\\d*|int\\d*|uint\\d*|bool|hash\\d*)\\b",
+      "captures": {
+        "1": { "name": "variable.parameter" }
+      }
+    },
+    "interface-extensions": {
+      "match": "\\b(nonpayable|view|returns)\\b",
+      "captures": {
+        "1": { "name": "storage.type.interface.huff"}
+      }
+    },
+
     "predeclaration-template": {
       "match": "((template)\\s+\\<\\s*((([A-Za-z0-9_]+)(\\s*,\\s*))*([A-Za-z0-9_]+))\\s*\\>)",
       "captures": {
@@ -247,7 +234,31 @@
         "2": { "name": "entity.name.function.huff" },
         "5": { "name": "variable.parameter"}
       }
+    },
+
+
+    "constant": {
+      "patterns": [
+        { "include": "#constant-definition"},
+        { "include": "#constant-reference"}
+      ]
+    },
+    "constant-definition": {
+      "match": "(#define\\s+constant)(\\s+([A-Za-z_]\\w*))\\b",
+      "captures": {
+        "1": {"name": "storage.constant.huff"},
+        "3": {"name": "constant.name.huff"}
+      }
+    },
+
+
+    "constant-reference": {
+      "match": "(\\[[A-Z_]+\\])",
+      "captures": {
+        "1": {"name": "constant.name.huff"}
+      }
     }
+    
   },
   "scopeName": "source.huff"
 }
