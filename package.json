@@ -38,6 +38,12 @@
         "title": "Huff: Generate MAIN() switch table from interface"
       }
     ],
+    "snippets": [
+      {
+        "language": "huff",
+        "path": "./src/snippets.json"
+      }
+    ],
     "languages": [
       {
         "id": "huff",
