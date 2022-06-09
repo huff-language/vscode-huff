@@ -6,6 +6,7 @@
     { "include": "#comment" },
     { "include": "#number" },
     { "include": "#declaration" },
+    { "include": "#interface"},
     { "include": "#control" },
     { "include": "#macro-call" },
     { "include": "#opcodes" }
@@ -114,6 +115,48 @@
         { "include": "#predeclaration-template" }
       ]
     },
+    "interface": {
+      "patterns": [
+        { "include": "#interface-function"},
+        { "include": "#interface-constant"},
+        { "include": "#interface-primitives"},
+        { "include": "#interface-extensions"}
+      ]
+    },
+
+
+    "interface-function": {
+      "match": "(#define\\s+function)(\\s+([A-Za-z_]\\w*))\\b",
+      "captures": {
+        "1": { "name": "storage.function.huff" },
+        "3": { "name": "entity.name.function.huff"},
+        "8": { "name": "keyword.modifier.huff"}
+      }
+    },
+
+    "interface-constant": {
+      "match": "(#define\\s+constant)(\\s+([A-Za-z_]\\w*))\\b",
+      "captures": {
+        "1": {"name": "storage.constant.huff"},
+        "3": {"name": "entity.name.constant.huff"}
+      }
+    },
+
+    "interface-primitives": {
+      "match": "\\b(address|string\\d*|bytes\\d*|int\\d*|uint\\d*|bool|hash\\d*)\\b",
+      "captures": {
+        "1": { "name": "variable.parameter" }
+      }
+    },
+
+    "interface-extensions": {
+      "match": "\\b(nonpayable|view|returns)\\b",
+      "captures": {
+        "1": { "name": "storage.type.interface.huff"}
+      }
+    },
+    
+    
     "declaration-macro": {
       "match": "(#define\\s+macro)(\\s+([A-Za-z_]\\w*))\\b(\\s+=\\s+((takes)\\s*(\\((\\d+)\\)))(\\s+(returns)\\s*(\\((\\d+)\\))))?",
       "captures": {
@@ -174,6 +217,7 @@
         "1": { "name": "keyword.operator.arithmetic.huff" }
       }
     },
+    
     "opcodes-stop": {
       "match": "\\b(selfdestruct|invalid|revert|return|stop)\\b",
       "name": "support.type.exception.huff"
