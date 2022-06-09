@@ -4,8 +4,8 @@
   "displayName": "huff",
   "description": "VSCode syntax highlighting for huff programming language.",
   "keywords": [
-      "ethereum",
-      "huff"
+    "ethereum",
+    "huff"
   ],
   "publisher": "d1ll0n",
   "contributors": [
@@ -24,7 +24,20 @@
   "categories": [
     "Programming Languages"
   ],
+  "activationEvents": [
+    "onCommand:huff.tools.switchgenerator"
+  ],
+  "scripts": {
+    "run": "node src/extension.js"
+  },
+  "main": "./src/extension.js",
   "contributes": {
+    "commands": [
+      {
+        "command": "huff.tools.switchgenerator",
+        "title": "Huff: Generate MAIN() switch table from interface"
+      }
+    ],
     "snippets": [
       {
         "language": "huff",
@@ -51,5 +64,11 @@
         "path": "./syntaxes/huff.json"
       }
     ]
+  },
+  "devDependencies": {
+    "@vscode/test-electron": "^2.1.3"
+  },
+  "dependencies": {
+    "keccak": "^3.0.2"
   }
 }
