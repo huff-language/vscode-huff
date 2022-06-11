@@ -24,7 +24,11 @@
   "categories": [
     "Programming Languages"
   ],
+  "capabilities": {
+    "hoverProvider": "true"
+  },
   "activationEvents": [
+    "onLanguage:huff",
     "onCommand:huff.tools.switchgenerator"
   ],
   "scripts": {
