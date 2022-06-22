@@ -23,13 +23,10 @@ async function startDebugger(sourceDirectory, currentFile, functionSelector, arg
   // if (options.state){
     // create the state repository if it does not exist yet
     if (config.statePath && !fs.existsSync(config.statePath)){
-      console.log()
       resetStateRepo(config.statePath, sourceDirectory)}
   // }
 
   const deployedBytecode = deployContract(bytecode, config, sourceDirectory);
-  console.log("deployedBytecode")
-  console.log(deployedBytecode)
   runDebugger(deployedBytecode, calldata,  options, config, sourceDirectory)
 }
 
@@ -132,7 +129,6 @@ const deployContract = (bytecode, config, cwd) => {
 
   const runMacroDebugger = (bytecode, config, cwd) => {
 
-    console.log(bytecode.toString())
     const command = `hevm exec \
     --code ${bytecode.toString()} \
     --address ${config.hevmContractAddress} \
@@ -187,7 +183,7 @@ function runInUserTerminal(command){
 }
 
 async function prepareDebugTransaction(functionSelector, argsObject, config){
-    
+    console.log("Preparing debugger calldata...")
     // TODO: error handle with user prompts
     const abiEncoder = new AbiCoder()
 
@@ -201,7 +197,6 @@ async function prepareDebugTransaction(functionSelector, argsObject, config){
 
     const encoded = abiEncoder.encode(type,value);
 
-    console.log(encoded)
     return `0x${functionSelector[0]}${encoded.slice(2, encoded.length)}`
 }
 
@@ -212,11 +207,10 @@ async function prepareDebugTransaction(functionSelector, argsObject, config){
  * @returns 
  */
 function compile(sourceDirectory, fileName) {
+    console.log("Compiling contract...")
     // TODO: install huffc locally if it doesnt exist and run with npx 
 
-    console.log(fileName)
     const command = `npx huffc ${fileName} --bytecode`;
-    console.log(sourceDirectory)
     const bytecode = execSync(command, {cwd: sourceDirectory});
     return `0x${bytecode.toString()}`;
 }
@@ -232,8 +226,6 @@ function compile(sourceDirectory, fileName) {
  */
  const resetStateRepo = (statePath, cwd) => {
   console.log("Creating state repository...")
-
-  console.log(cwd, statePath)
 
   const removeStateCommand = `rm -rf ${statePath}`;
   const createStateRepository = `mkdir ${statePath}`;

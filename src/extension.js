@@ -63,7 +63,6 @@ class DebuggerViewProvider{
         webviewView.webview.html = this.getHtmlForWebView(webviewView.webview);
 
         webviewView.webview.onDidReceiveMessage(data => {
-            console.log(data)
             switch (data.type) {
                 case "loadDocument":{
                     const functionSignatures = getFunctionSignaturesAndArgs(vscode.window.activeTextEditor?.document.getText());
@@ -72,8 +71,6 @@ class DebuggerViewProvider{
                 }
                 case "start-debug": {
                     const {selectedFunction, argsArr} = data.values;
-                    console.log("selectedFunc", selectedFunction)
-                    console.log("argsArr", argsArr)
 
                     // TODO: get config from radio buttons
                     startDebugger(
@@ -113,18 +110,14 @@ class DebuggerViewProvider{
 
     getHtmlForWebView(webview) {
         // local path of main script to run in the webview
-
-        console.log(this._extensionURI)
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "media", "main.js"));
 
         // Do the same for the stylesheet
         const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "media", "vscode.css"));
         const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "media", "main.css"));
-        console.log(scriptUri)
 
         // Use nonce to allow only a specific script to be run
         const nonce = getNonce();
-        console.log(nonce)
 
         return `<!DOCTYPE html>
                 <html>
@@ -195,7 +188,6 @@ class MacroDebuggerViewProvider{
         webviewView.webview.html = this.getHtmlForWebView(webviewView.webview);
 
         webviewView.webview.onDidReceiveMessage(data => {
-            console.log(data)
             switch (data.type) {
                 case "loadMacros":{
                     const macros = getMacros(vscode.window.activeTextEditor?.document.getText());
@@ -208,8 +200,6 @@ class MacroDebuggerViewProvider{
                     // get required file imports to flatten the file
                     const imports = getImports(vscode.window.activeTextEditor?.document.getText())
                     
-                    console.log("imports")
-                    console.log(imports)
                     // TODO: get config from radio buttons
                     startMacroDebugger(
                         vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri).uri.path, 
@@ -236,17 +226,14 @@ class MacroDebuggerViewProvider{
     getHtmlForWebView(webview) {
         // local path of main script to run in the webview
 
-        console.log(this._extensionURI)
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "media", "macro.main.js"));
 
         // Do the same for the stylesheet
         const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "media", "vscode.css"));
         const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "media", "main.css"));
-        console.log(scriptUri)
 
         // Use nonce to allow only a specific script to be run
         const nonce = getNonce();
-        console.log(nonce)
 
         return `<!DOCTYPE html>
                 <html>

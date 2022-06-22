@@ -3,19 +3,14 @@
 (function () {
     const vscode = acquireVsCodeApi();
 
-    const oldState = vscode.getState() || { colors: [], functionSelectors: [] };
+    const oldState = vscode.getState() || { functionSelectors: [] };
 
     /** @type {Array<{ value: string }>} */
-    let colors = oldState.colors || [];
     let functionSelectors = oldState.functionSelectors || [];
     let selectedFunction = [];
     
-
-    document.querySelector('.launch-debugger-button').addEventListener('click', () => {
-        addColor();
-    });
-    
     document.querySelector(".load-interface").addEventListener("click", () => {
+        console.log("load interface clicked")
         vscode.postMessage({type: "loadDocument"});
         
         // onLoadInterfaceClicked()
