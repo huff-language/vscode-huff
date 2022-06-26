@@ -70,7 +70,6 @@
      * @param {*} functionSelectors 
      */
     function addOptionsToFunctionSelector(_functionSelectors){
-        console.log(_functionSelectors)
         functionSelectors = _functionSelectors
         var functionSelectorDropdown = document.getElementById("function-select");
         

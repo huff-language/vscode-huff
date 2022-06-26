@@ -10,16 +10,14 @@
     let selectedMacro = "";
     
 
-    
-    document.querySelector(".load-macro").addEventListener("click", () => {
-        console.log("click")
-        vscode.postMessage({type: "loadMacros"});
-        
-        // onLoadInterfaceClicked()
+    document.querySelector(".load-macro")
+        .addEventListener("click", () => {
+            vscode.postMessage({type: "loadMacros"});            
     });
 
-    document.querySelector(".start-debug").addEventListener("click", () => {
-        prepareDebugSession();
+    document.querySelector(".start-debug")
+        .addEventListener("click", () => {
+            prepareDebugSession();
     })
 
 
@@ -61,7 +59,6 @@
      * @param {*} macroDefinitions 
      */
     function addOptionsToMacroSelector(_macroDefinitions){
-        console.log(_macroDefinitions)
         macroDefinitions = _macroDefinitions
         var functionSelectorDropdown = document.getElementById("macro-select");
         

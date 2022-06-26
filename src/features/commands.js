@@ -16,8 +16,6 @@ async function generateSwitchTable(document, asJson) {
         vscode.window.showErrorMessage("Function sighash collisions detected " + collisions.join(","));
     }
 
-    console.log(sighashes)
-
     let content;
     if (asJson) {
         content = JSON.stringify(sighashes);

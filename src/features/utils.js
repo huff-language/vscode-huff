@@ -90,7 +90,6 @@ function getFunctionSignaturesAndArgs(content){
 function getMacros(content){
     //takes(?<takes>[^\)]*)\)
     const macroRegex = /#define\s+macro\s+(?<name>[^\(\s]+)\s?\(\)\s?=\s?takes\((?<takes>[\d])\)\s?returns\((?<returns>[\d])\)\s?{(?<body>[\s\S]*?(?=}))/gsm;
-    console.log("INSIDE GET MACROS")
 
     let match;
     let macros = {};
