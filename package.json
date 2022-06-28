@@ -25,10 +25,15 @@
   "categories": [
     "Programming Languages"
   ],
+  "capabilities": {
+    "hoverProvider": "true"
+  },
   "activationEvents": [
+    "onLanguage:huff",
     "onView:huff.debugView",
     "onView:huff.debugMacro",
     "onCommand:huff.tools.startDebug",
+    "onCommand:huff.tools.eventSignatureGenerator",
     "onCommand:huff.tools.switchgenerator"
   ],
   "scripts": {
@@ -80,15 +85,8 @@
         "title": "Huff: Generate MAIN() switch table from interface"
       },
       {
-        "command": "calicoColors.addColor",
-        "category": "Calico Colors",
-        "title": "Add Color"
-      },
-      {
-        "command": "calicoColors.clearColors",
-        "category": "Calico Colors",
-        "title": "Clear Colors",
-        "icon": "$(clear-all)"
+        "command": "huff.tools.eventSignatureGenerator",
+        "title":"Huff: Generate interface signature constants from interface"
       }
     ],
     "snippets": [

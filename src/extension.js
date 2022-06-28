@@ -1,5 +1,9 @@
 const vscode = require("vscode");
-const { generateSwitchTable } = require("./features/commands");
+const { generateSwitchTable, generateEventSignatures } = require("./features/commands");
+const { provideHoverHandler } = require("./features/hover/index");
+const { LANGUAGE_ID } = require("./settings");
+
+let activeEditor;
 
 // View Providers
 const { MacroDebuggerViewProvider } = require("./features/viewer/providers/macroDebuggerViewProvider");
@@ -12,6 +16,14 @@ const { DebuggerViewProvider } = require("./features/viewer/providers/functionDe
  * @param {*} context Vscode context 
  */
 function activate(context){
+    const active =  vscode.window.activeTextEditor;
+    activeEditor = active;
+
+    vscode.languages.registerHoverProvider(LANGUAGE_ID, {
+        provideHover(document, position, token){
+            return provideHoverHandler(document, position, token, LANGUAGE_ID)
+        },
+    })
 
     // Register the debug webview
     const debugProvider = new DebuggerViewProvider(context.extensionUri);
@@ -33,9 +45,16 @@ function activate(context){
             generateSwitchTable(doc || vscode.window.activeTextEditor.document, asJson);
         }
     )
+    const interfaceSignatureGenerator = vscode.commands.registerCommand(
+        "huff.tools.eventSignatureGenerator",
+        (doc, asJson) => {
+            generateEventSignatures(doc || vscode.window.activeTextEditor.document, asJson);
+        }
+    )
 
     // Register commands
     context.subscriptions.push(switchGenerator);
+    context.subscriptions.push(eventSignatureGenerator);
 }
 
 
