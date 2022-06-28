@@ -1,9 +1,10 @@
 const vscode = require("vscode");
-const ethers = require("ethers"); 
+const createKeccakHash = require('keccak');
 const fs = require("fs");
 const {execSync} = require("child_process");
 const { hevmConfig } = require("../../options");
 const { deployContract, checkHevmInstallation, writeMacro, runInUserTerminal} = require("./utils");
+const { default: compileHuff } = require("huffc");
 
 /**Start Macro Debugger
  * 
@@ -21,25 +22,24 @@ const { deployContract, checkHevmInstallation, writeMacro, runInUserTerminal} = 
  * @param {*} argsObject           The stack args provided by the user
  */
 async function startMacroDebugger(sourceDirectory, currentFile, imports, macro, argsObject){
-    if (!checkHevmInstallation()) return;
+    if (!(await checkHevmInstallation())) return;
 
     // Create deterministic deployment address for each contract
     const config = {
       ...hevmConfig,
-      hevmContractAddress: ethers.utils.keccak256(Buffer.from(macro.toString())).toString().slice(0,42),
+      hevmContractAddress: createKeccakHash("keccak256")
+                            .update(Buffer.from(macro.toString()))
+                            .digest("hex")
+                            .toString("hex")
+                            .slice(0,42),
     }
   
     // Compilable macro is the huff source code for our new macro object
     const compilableMacro = createCompiledMacro(sourceDirectory, macro, argsObject, currentFile, imports);
     
-    // Write this source code to a temp location
-    writeMacro(sourceDirectory, config.tempMacroFilename, compilableMacro)
-  
-    // Compile the newly created macro
-    const macroDeploymentBytecode = compileMacro(sourceDirectory, config.tempMacroFilename)
-    
+    const macroRuntimeBytecode = compileMacro(compilableMacro)
+
     // deploy the contract to get the runtime code
-    const macroRuntimeBytecode = deployContract(macroDeploymentBytecode, config, sourceDirectory, true);
     runMacroDebugger(macroRuntimeBytecode, config, sourceDirectory);
   }
 
@@ -73,15 +73,16 @@ function createCompiledMacro(cwd, macro, argsObject, currentFile, imports) {
  * 
  * Returns the compiled macro's bytecode
  * 
- * @param {String} sourceDirectory Root workspace directory
- * @param {String} tempFileLocation Location of the temp compiled macro 
+ * @param {String} source Macro sourcecode
  * @returns {String} bytecode - Bytecode string returned by the huff compiler
  */
-const compileMacro = (sourceDirectory, tempFileLocation) => {
-    //TODO: check for the existence of the huff compiler - if it does not exist then prompt for it's installation
-  
-    const command = `npx huffc ${sourceDirectory}/${tempFileLocation}.huff --bytecode`;
-    const bytecode = execSync(command, {cwd: sourceDirectory});
+const compileMacro = (source) => {
+    const { runtimeBytecode: bytecode} = compileHuff({
+      filePath: "",
+      generateAbi: false,
+      content: source
+    })
+
     return `0x${bytecode.toString()}`;
 }
   

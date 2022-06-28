@@ -4,7 +4,7 @@ const fs = require("fs");
 const {execSync} = require("child_process");
 const { AbiCoder } = require("ethers/lib/utils");
 const { hevmConfig } = require("../../options");
-const { deployContract, checkHevmInstallation, runInUserTerminal, compile} = require("./utils");
+const { deployContract, checkHevmInstallation, runInUserTerminal, compile } = require("./utils");
 
 
 // TODO: must install the huffc compiler if it does not exists on the system
@@ -18,7 +18,8 @@ const { deployContract, checkHevmInstallation, runInUserTerminal, compile} = req
  * @param {Object} options Options - not explicitly defined 
  */
 async function startDebugger(sourceDirectory, currentFile, functionSelector, argsArray, options={state:true}){
-  if (!checkHevmInstallation()) return;
+  if (!(await checkHevmInstallation())) return;
+
   
   // Create deterministic deployment address for each contract for the deployed contract
   const config = {
@@ -59,7 +60,7 @@ function runDebugger(bytecode, calldata, flags, config, cwd) {
   --gas 0xffffffff \
   ${(flags.state) ? ("--state "+ cwd + "/" + config.statePath)  : ""} \
   --debug \
-  --calldata ${calldata}`
+  ${calldata ? "--calldata ${calldata}" : ""}`
   
   // command is cached into a file as execSync has a limit on the command size that it can execute
   fs.writeFileSync(cwd + "/cache/hevmtemp", command, {cwd});
@@ -81,6 +82,8 @@ function runDebugger(bytecode, calldata, flags, config, cwd) {
  */
 async function prepareDebugTransaction(functionSelector, argsObject, config){
     console.log("Preparing debugger calldata...")
+    if (argsObject.length == 0) return null;
+
     // TODO: error handle with user prompts
     const abiEncoder = new AbiCoder()
 
@@ -114,6 +117,11 @@ function resetStateRepo(statePath, cwd) {
   const initStateRepositoryCommand = `cd ${statePath} && git init && git commit --allow-empty -m "init" && cd ..`;
 
   execSync(removeStateCommand, {cwd})
+
+  // check if a cache folder exists
+  if (!fs.existsSync(cwd + "/cache")){
+    fs.mkdirSync(cwd + "/cache")}
+
   execSync(createStateRepository, {cwd})
   execSync(initStateRepositoryCommand, {cwd})
   console.log("Created state repository...")

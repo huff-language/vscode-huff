@@ -2,14 +2,8 @@ const vscode = require("vscode");
 const commandExists = require("command-exists");
 const fs = require("fs");
 const {execSync} = require("child_process");
-
-module.exports = {
-    deployContract,
-    runInUserTerminal,
-    compile,
-    writeMacro,
-    checkHevmInstallation
-}
+const {default: compileHuff} = require("huffc");
+const { getImports } = require("../utils");
 
 /**Deploy Contract
  * 
@@ -65,9 +59,24 @@ function runInUserTerminal(command){
  */
 function compile(sourceDirectory, fileName) {
     console.log("Compiling contract...")
-    // TODO: install huffc locally if it doesnt exist and run with npx 
 
-    const command = `npx huffc ${fileName} --bytecode`;
+    // hack - relative imports would not work, force flatten
+    // let fileText = fs.readFileSync(`${sourceDirectory}/${fileName}`).toString();
+    // const flatten = getImports(fileText).map(file => fs.readFileSync(file.replace(`#include ".`, `${sourceDirectory}`).replace('"','')).toString()).join("\n")
+    // fileText = fileText.replace(/#include.*$/gm, '')
+    // fileText = flatten.concat(fileText);
+
+    // console.log(fileText)
+    // const { bytecode} = compileHuff({
+    //     filePath: "",
+    //     generateAbi: true,
+    //     content: fileText
+    // })
+
+    // having issues with the function level debugger
+    const command = `huffc ${fileName} --bytecode`
+    console.log(command)
+    console.log(sourceDirectory)
     const bytecode = execSync(command, {cwd: sourceDirectory});
     return `0x${bytecode.toString()}`;
 }
@@ -105,4 +114,13 @@ async function checkHevmInstallation() {
         )
         return false;
     }
+}
+
+
+module.exports = {
+    deployContract,
+    runInUserTerminal,
+    compile,
+    writeMacro,
+    checkHevmInstallation,
 }

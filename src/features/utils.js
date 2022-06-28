@@ -89,13 +89,13 @@ function getFunctionSignaturesAndArgs(content){
 
 function getMacros(content){
     //takes(?<takes>[^\)]*)\)
-    const macroRegex = /#define\s+macro\s+(?<name>[^\(\s]+)\s?\(\)\s?=\s?takes\((?<takes>[\d])\)\s?returns\((?<returns>[\d])\)\s?{(?<body>[\s\S]*?(?=}))/gsm;
-
+    const macroRegex = /#define\s+macro\s+(?<name>[^\(\s]+)\s?\(\)\s?=\s?takes\s?\((?<takes>[\d])\)\s?returns\s?\((?<returns>[\d])\)\s?{(?<body>[\s\S]*?(?=}))/gsm;
     let match;
     let macros = {};
     
     // find all of the macros and add them to the return object
     while (match = macroRegex.exec(content)){
+        console.log(match)
         const {name, takes, returns, body} = match.groups;
         macros[name] = { takes, returns, body }
     }
@@ -114,6 +114,7 @@ function getImports(content){
     }
     return imports;
 }
+
 
 module.exports = {
     functionSignatureExtractor,
