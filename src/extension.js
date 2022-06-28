@@ -1,5 +1,5 @@
 const vscode = require("vscode");
-const { generateSwitchTable } = require("./features/commands");
+const { generateSwitchTable, generateEventSignatures } = require("./features/commands");
 const { provideHoverHandler } = require("./features/hover/index");
 const { LANGUAGE_ID } = require("./settings");
 
@@ -28,9 +28,16 @@ function activate(context){
             generateSwitchTable(doc || vscode.window.activeTextEditor.document, asJson);
         }
     )
+    const interfaceSignatureGenerator = vscode.commands.registerCommand(
+        "huff.tools.eventSignatureGenerator",
+        (doc, asJson) => {
+            generateEventSignatures(doc || vscode.window.activeTextEditor.document, asJson);
+        }
+    )
 
     // Register commands
     context.subscriptions.push(switchGenerator);
+    context.subscriptions.push(eventSignatureGenerator);
 }
 
 module.exports = {
