@@ -24,9 +24,13 @@
   "categories": [
     "Programming Languages"
   ],
+  "capabilities": {
+    "hoverProvider": "true"
+  },
   "activationEvents": [
-    "onCommand:huff.tools.switchgenerator",
-    "onCommand:huff.tools.eventSignatureGenerator"
+    "onLanguage:huff",
+    "onCommand:huff.tools.eventSignatureGenerator",
+    "onCommand:huff.tools.switchgenerator"
   ],
   "scripts": {
     "run": "node src/extension.js"
