@@ -59,7 +59,7 @@ function getFunctionSignaturesAndArgs(content){
     let collisions = [];
 
     while (match = publicFuncSigRegex.exec(content)){
-        let args = match.groups.args.replace(commentRegex(), "").split(",").map(item => canonicalizeEvmType(item.trim().split(" ")[0]));
+        let args = (match.groups.args.length) ? match.groups.args.replace(commentRegex(), "").split(",").map(item => canonicalizeEvmType(item.trim().split(" ")[0])) : [];
         let fnSig = `${match.groups.name.trim()}(${args.join(",")})`;
         let sigHash = createKeccakHash('keccak256').update(fnSig).digest("hex").toString("hex").slice(0,8);
         if (sigHash in sighashes && sighashes[sigHash] !== fnSig){
@@ -78,7 +78,6 @@ function getMacros(content){
     
     // find all of the macros and add them to the return object
     while (match = macroRegex.exec(content)){
-        console.log(match)
         const {name, takes, returns, body} = match.groups;
         macros[name] = { takes, returns, body }
     }

@@ -2,7 +2,7 @@ const vscode = require("vscode");
 
 const {getNonce} = require("./utils");
 const {startDebugger} = require("../debugger");
-const {getFunctionSignaturesAndArgs} = require("../../utils");
+const {getFunctionSignaturesAndArgs, getImports} = require("../../utils");
 
 
 class DebuggerViewProvider{
@@ -33,16 +33,21 @@ class DebuggerViewProvider{
             switch (data.type) {
                 case "loadDocument":{
                     const functionSignatures = getFunctionSignaturesAndArgs(vscode.window.activeTextEditor?.document.getText());
+                    console.log(functionSignatures.sighashes);
                     this.addOptionsToFunctionSelector(functionSignatures.sighashes);
+                    
                     break;
                 }
                 case "start-debug": {
                     const {selectedFunction, argsArr} = data.values;
+                    
+                    const imports = getImports(vscode.window.activeTextEditor?.document.getText())
 
                     // TODO: get config from radio buttons
                     startDebugger(
                         vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri).uri.path, 
                         vscode.workspace.asRelativePath(vscode.window.activeTextEditor.document.uri), 
+                        imports,
                         selectedFunction, 
                         argsArr, 
                         {}

@@ -41,7 +41,7 @@ class MacroDebuggerViewProvider{
                     break;
                 }
                 case "start-macro-debug": {
-                    const {macro, argsArr} = data.values;
+                    const {macro, argsArr, stateChecked} = data.values;
 
                     // get required file imports to flatten the file
                     const imports = getImports(vscode.window.activeTextEditor?.document.getText())
@@ -53,7 +53,9 @@ class MacroDebuggerViewProvider{
                         imports, 
                         macro, 
                         argsArr, 
-                        {});
+                        {
+                            stateChecked
+                        });
                 }
             }
         });
@@ -105,6 +107,12 @@ class MacroDebuggerViewProvider{
 
                         <ul class="stack-items">
                         </ul>
+
+                        <!-- Have a checkbox button to operate with state -->
+                        <form>
+                            <input class="state-checkbox" type="checkbox" id="state-checkbox" name="state-checkbox" value="debug-mode">
+                            <label for="state-checkbox">Run Constructor First</label>
+                        </form>
 
                         <button class="start-debug">Start Debug</button>
                         <script nonce="${nonce}" src="${scriptUri}"></script>

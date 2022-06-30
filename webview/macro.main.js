@@ -31,10 +31,14 @@
             node => node.childNodes.forEach(
                 input => argsArr.push(input.value)))
 
+        // get state checkbox value
+        const checked = document.querySelector(".state-checkbox").checked;
+
         // Send a message to the main extension to trigger the hevm session
         vscode.postMessage({type: "start-macro-debug", values: {
             macro: macroDefinitions[selectedMacro],
-            argsArr
+            argsArr,
+            stateChecked: checked
         }})
     }
 

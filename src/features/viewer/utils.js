@@ -5,6 +5,7 @@ const {execSync} = require("child_process");
 const {default: compileHuff} = require("huffc");
 const { getImports } = require("../utils");
 
+
 /**Deploy Contract
  * 
  * Deploy the provided contract bytecode to hevm
@@ -21,6 +22,9 @@ function deployContract(
     cwd, 
     macro = false
   ) {
+    if (config.withState){
+        checkStateRepoExistence(config.statePath, cwd)
+    }
   
       const command = `hevm exec
       --code ${bytecode} \
@@ -31,7 +35,7 @@ function deployContract(
       ${(config.state && !macro)  ? "--state " + cwd + "/" + config.statePath : ""}
       `
       // cache command
-      fs.writeFileSync(cwd + "/cache/hevmtemp", command, {cwd});
+      writeHevmCommand(command, "cache/hevmtemp", cwd);
       
       // execute command
       return execSync("`cat " + cwd + "/cache/hevmtemp`")
@@ -50,6 +54,50 @@ function runInUserTerminal(command){
     terminal.show();
   }
 
+
+function writeHevmCommand(command, file, cwd){
+    
+    try { !fs.accessSync(`${cwd}/cache`) }
+    catch (e) {fs.mkdirSync(`${cwd}/cache`) }
+    
+    // TODO: use file
+    fs.writeFileSync(`${cwd}/cache/hevmtemp`, command);
+}
+
+function checkStateRepoExistence(statePath, cwd) {
+    try { !fs.accessSync(`${cwd}/${statePath}`) }
+    catch (e) { resetStateRepo(statePath, cwd) }
+}
+
+/**Reset state repo
+ * 
+ * Hevm state is stored within a local git repository, to reset the state 
+ * we must delete the repository then init a new one.
+ * 
+ * TODO: Windows compatibility
+ * @param statePath 
+ */
+ function resetStateRepo(statePath, cwd) {
+    console.log("Creating state repository...")
+    console.log(cwd)
+    
+    const fullPath = cwd + "/" + statePath;
+    
+    // delete old state
+    try{ fs.rmSync(fullPath, {recursive:true}) } 
+    catch (e){console.log("Cache didn't exist")};
+
+    // check if a cache folder exists
+    try { !fs.accessSync(`${cwd}/cache`) }
+    catch (e) {fs.mkdirSync(`${cwd}/cache`) }
+    fs.mkdirSync(fullPath);
+
+    
+    const initStateRepositoryCommand = `git init && git commit --allow-empty -m "init"`;
+    execSync(initStateRepositoryCommand, {cwd: fullPath})
+    console.log("Created state repository...")
+  }
+  
 
   /**Compile
  * 
@@ -79,6 +127,29 @@ function compile(sourceDirectory, fileName) {
     console.log(sourceDirectory)
     const bytecode = execSync(command, {cwd: sourceDirectory});
     return `0x${bytecode.toString()}`;
+}
+
+
+/**Compile Macro
+ * 
+ * TODO: don't assume that the current macro is located at cache/tempMacro.huff
+ * 
+ * Returns the compiled macro's bytecode
+ * 
+ * @param {String} source Macro sourcecode
+ * @returns {String} bytecode - Bytecode string returned by the huff compiler
+ */
+ const compileMacro = (source) => {
+    const { bytecode, runtimeBytecode} = compileHuff({
+      filePath: "",
+      generateAbi: false,
+      content: source
+    })
+
+    return {
+      bytecode: `0x${bytecode.toString()}`,
+      runtimeBytecode: `0x${runtimeBytecode.toString()}`
+    }
 }
 
 
@@ -123,4 +194,8 @@ module.exports = {
     compile,
     writeMacro,
     checkHevmInstallation,
+    writeHevmCommand,
+    resetStateRepo,
+    checkStateRepoExistence,
+    compileMacro
 }

@@ -4,7 +4,7 @@ const fs = require("fs");
 const {execSync} = require("child_process");
 const { AbiCoder } = require("ethers/lib/utils");
 const { hevmConfig } = require("../../options");
-const { deployContract, checkHevmInstallation, runInUserTerminal, compile } = require("./utils");
+const { deployContract, checkHevmInstallation, runInUserTerminal, compile, writeHevmCommand, resetStateRepo, compileMacro } = require("./utils");
 
 
 // TODO: must install the huffc compiler if it does not exists on the system
@@ -17,7 +17,7 @@ const { deployContract, checkHevmInstallation, runInUserTerminal, compile } = re
  * @param {Array<Array<String>>} argsArray Each arg is provided in the format [type, value] so that they can easily be parsed with abi encoder
  * @param {Object} options Options - not explicitly defined 
  */
-async function startDebugger(sourceDirectory, currentFile, functionSelector, argsArray, options={state:true}){
+async function startDebugger(sourceDirectory, currentFile, imports, functionSelector, argsArray, options={state:true}){
   if (!(await checkHevmInstallation())) return;
 
   
@@ -30,7 +30,10 @@ async function startDebugger(sourceDirectory, currentFile, functionSelector, arg
   }
 
   const calldata = await prepareDebugTransaction(functionSelector, argsArray, config);
-  const bytecode = compile(sourceDirectory, currentFile);
+  const compilableFile = compileFile(sourceDirectory, currentFile, imports);
+
+  const {bytecode, runtimeBytecode} = compileMacro(compilableFile)
+  
 
   //TODO: make this only happen with the state option set!
   // if (options.state){
@@ -39,8 +42,18 @@ async function startDebugger(sourceDirectory, currentFile, functionSelector, arg
       resetStateRepo(config.statePath, sourceDirectory)}
   // }
 
-  const deployedBytecode = deployContract(bytecode, config, sourceDirectory);
-  runDebugger(deployedBytecode, calldata,  options, config, sourceDirectory)
+  runDebugger(runtimeBytecode, calldata,  options, config, sourceDirectory)
+}
+
+function compileFile(cwd, currentFile, imports){
+  const dirPath = currentFile.split("/").slice(0,-1).join("/")
+  const paths = imports.map(importPath => `${cwd}/${dirPath}${importPath.replace(/#include\s?"./, "").replace('"', "")}`);
+  paths.push(cwd+ "/" + currentFile);
+  const files = paths.map(path => fs.readFileSync(path)
+    .toString()
+  );
+
+  return `${files.join("\n")}`;
 }
 
   
@@ -52,7 +65,7 @@ function runDebugger(bytecode, calldata, flags, config, cwd) {
         resetStateRepo(config.statePath)}
   }
   
-    // Command
+  // Command
   const command = `hevm exec \
   --code ${bytecode} \
   --address ${config.hevmContractAddress} \
@@ -60,14 +73,14 @@ function runDebugger(bytecode, calldata, flags, config, cwd) {
   --gas 0xffffffff \
   ${(flags.state) ? ("--state "+ cwd + "/" + config.statePath)  : ""} \
   --debug \
-  ${calldata ? "--calldata ${calldata}" : ""}`
+  ${calldata ? "--calldata " + calldata : ""}`
   
   // command is cached into a file as execSync has a limit on the command size that it can execute
-  fs.writeFileSync(cwd + "/cache/hevmtemp", command, {cwd});
+  
+  writeHevmCommand(command, "cache/hevmtemp", cwd);
   
   // TODO: run the debugger - attach this to a running terminal
   runInUserTerminal("`cat " + cwd + "/cache/hevmtemp`")
-  // execSync("`cat " + cwd + "/cache/hevmtemp`", {stdio: ["inherit", "inherit", "inherit"], cwd})
 }
 
 
@@ -82,7 +95,7 @@ function runDebugger(bytecode, calldata, flags, config, cwd) {
  */
 async function prepareDebugTransaction(functionSelector, argsObject, config){
     console.log("Preparing debugger calldata...")
-    if (argsObject.length == 0) return null;
+    if (argsObject.length == 0) return `0x${functionSelector[0]}`;
 
     // TODO: error handle with user prompts
     const abiEncoder = new AbiCoder()
@@ -98,33 +111,6 @@ async function prepareDebugTransaction(functionSelector, argsObject, config){
     const encoded = abiEncoder.encode(type,value);
 
     return `0x${functionSelector[0]}${encoded.slice(2, encoded.length)}`
-}
-
-
-/**Reset state repo
- * 
- * Hevm state is stored within a local git repository, to reset the state 
- * we must delete the repository then init a new one.
- * 
- * TODO: Windows compatibility
- * @param statePath 
- */
-function resetStateRepo(statePath, cwd) {
-  console.log("Creating state repository...")
-
-  const removeStateCommand = `rm -rf ${statePath}`;
-  const createStateRepository = `mkdir ${statePath}`;
-  const initStateRepositoryCommand = `cd ${statePath} && git init && git commit --allow-empty -m "init" && cd ..`;
-
-  execSync(removeStateCommand, {cwd})
-
-  // check if a cache folder exists
-  if (!fs.existsSync(cwd + "/cache")){
-    fs.mkdirSync(cwd + "/cache")}
-
-  execSync(createStateRepository, {cwd})
-  execSync(initStateRepositoryCommand, {cwd})
-  console.log("Created state repository...")
 }
 
 

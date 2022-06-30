@@ -54,7 +54,7 @@ function activate(context){
 
     // Register commands
     context.subscriptions.push(switchGenerator);
-    context.subscriptions.push(eventSignatureGenerator);
+    context.subscriptions.push(interfaceSignatureGenerator);
 }
 
 

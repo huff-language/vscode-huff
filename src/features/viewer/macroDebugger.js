@@ -3,8 +3,7 @@ const createKeccakHash = require('keccak');
 const fs = require("fs");
 const {execSync} = require("child_process");
 const { hevmConfig } = require("../../options");
-const { deployContract, checkHevmInstallation, writeMacro, runInUserTerminal} = require("./utils");
-const { default: compileHuff } = require("huffc");
+const { deployContract, checkHevmInstallation, writeMacro, runInUserTerminal, writeHevmCommand, compileMacro} = require("./utils");
 
 /**Start Macro Debugger
  * 
@@ -21,12 +20,13 @@ const { default: compileHuff } = require("huffc");
  * @param {Object} macro           Macro object - contains takes, returns and the macro body text
  * @param {*} argsObject           The stack args provided by the user
  */
-async function startMacroDebugger(sourceDirectory, currentFile, imports, macro, argsObject){
+async function startMacroDebugger(sourceDirectory, currentFile, imports, macro, argsObject, options){
     if (!(await checkHevmInstallation())) return;
 
     // Create deterministic deployment address for each contract
     const config = {
       ...hevmConfig,
+      withState: options.stateChecked,
       hevmContractAddress: createKeccakHash("keccak256")
                             .update(Buffer.from(macro.toString()))
                             .digest("hex")
@@ -37,10 +37,10 @@ async function startMacroDebugger(sourceDirectory, currentFile, imports, macro, 
     // Compilable macro is the huff source code for our new macro object
     const compilableMacro = createCompiledMacro(sourceDirectory, macro, argsObject, currentFile, imports);
     
-    const macroRuntimeBytecode = compileMacro(compilableMacro)
+    const {bytecode, runtimeBytecode} = compileMacro(compilableMacro)
 
     // deploy the contract to get the runtime code
-    runMacroDebugger(macroRuntimeBytecode, config, sourceDirectory);
+    runMacroDebugger(bytecode, runtimeBytecode, config, sourceDirectory);
   }
 
 /**Create compiled macro
@@ -56,46 +56,51 @@ async function startMacroDebugger(sourceDirectory, currentFile, imports, macro, 
  * @returns 
  */
 function createCompiledMacro(cwd, macro, argsObject, currentFile, imports) {
-    const compilableMacro = `
-    #include "${cwd}/${currentFile}"
-    ${imports.map(file => file.replace('".', `"${cwd}`)).join("\n")}
-    #define macro MAIN() = takes(0) returns (0) {
-      ${argsObject.join(" ")}
-      ${macro.body}
-    }`;
+    // get relative path
+    const dirPath = currentFile.split("/").slice(0,-1).join("/")
+
+    // flatten imports 
+    //TODO: strip out other main macros with regex - clean up all regex
+    const paths = imports.map(importPath => `${cwd}/${dirPath}${importPath.replace(/#include\s?"./, "").replace('"', "")}`);
+    paths.push(cwd+ "/" + currentFile);
+    const files = paths.map(path => fs.readFileSync(path)
+      .toString()
+      .replace(/#define\s?macro\s?MAIN[\s\S]*?{[\s\S]*?}/gsm, "") // remove main
+  );
+
+    const compilableMacro = `#include "../${currentFile}"
+${files.join("\n")}
+#define macro MAIN() = takes(0) returns (0) {
+  ${argsObject.join(" ")}
+  ${macro.body}
+}`;
+
+
     return compilableMacro
 }
 
 
-/**Compile Macro
- * 
- * TODO: don't assume that the current macro is located at cache/tempMacro.huff
- * 
- * Returns the compiled macro's bytecode
- * 
- * @param {String} source Macro sourcecode
- * @returns {String} bytecode - Bytecode string returned by the huff compiler
- */
-const compileMacro = (source) => {
-    const { runtimeBytecode: bytecode} = compileHuff({
-      filePath: "",
-      generateAbi: false,
-      content: source
-    })
 
-    return `0x${bytecode.toString()}`;
-}
   
-function runMacroDebugger(bytecode, config, cwd) {
-    const command = `hevm exec \
-    --code ${bytecode.toString()} \
+function runMacroDebugger(bytecode, runtimeBytecode, config, cwd) {
+  // extract state
+  const { withState, hevmContractAddress, hevmCaller, statePath } = config;  
+  
+  // If state is provided, we need to deploy the contract and persist constructor storage
+  if (withState) {
+    deployContract(bytecode, config, cwd);
+  }
+
+  const command = `hevm exec \
+    --code ${runtimeBytecode.toString()} \
     --address ${config.hevmContractAddress} \
     --caller ${config.hevmCaller} \
     --gas 0xffffffff \
+    ${withState ? "--state " + cwd + "/" + config.statePath : ""} \
     --debug`
 
     // command is cached into a file as execSync has a limit on the command size that it can execute
-    fs.writeFileSync(cwd + "/cache/hevmtemp", command, {cwd});
+    writeHevmCommand(command, "cache/hevmtemp", cwd)
 
     // TODO: run the debugger - attach this to a running terminal
     runInUserTerminal("`cat " + cwd + "/cache/hevmtemp`")
