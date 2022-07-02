@@ -74,7 +74,7 @@
         var functionSelectorDropdown = document.getElementById("function-select");
         
         // listen for changes in the function that is selected
-        functionSelectorDropdown.addEventListener("change", (event) => createArgsInputs(event))
+        functionSelectorDropdown.addEventListener("click", (event) => createArgsInputs(event))
 
         // add each function as a drop down option
         for (const fn in _functionSelectors){
@@ -83,6 +83,7 @@
             functionSelectorDropdown.add(option); 
         }
 
+        functionSelectorDropdown.click();
     }
 
     function createArgsInputs(event){

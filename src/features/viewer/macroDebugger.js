@@ -3,7 +3,7 @@ const createKeccakHash = require('keccak');
 const fs = require("fs");
 const {execSync} = require("child_process");
 const { hevmConfig } = require("../../options");
-const { deployContract, checkHevmInstallation, writeMacro, runInUserTerminal, writeHevmCommand, compileMacro} = require("./utils");
+const { deployContract, writeMacro, runInUserTerminal, writeHevmCommand, compileMacro, registerError, compileFromFile, checkInstallations} = require("./utils");
 
 /**Start Macro Debugger
  * 
@@ -21,10 +21,11 @@ const { deployContract, checkHevmInstallation, writeMacro, runInUserTerminal, wr
  * @param {*} argsObject           The stack args provided by the user
  */
 async function startMacroDebugger(sourceDirectory, currentFile, imports, macro, argsObject, options){
-    if (!(await checkHevmInstallation())) return;
+    if (!(await checkInstallations())) return;
 
-    // Create deterministic deployment address for each contract
-    const config = {
+    try {
+       // Create deterministic deployment address for each contract
+      const config = {
       ...hevmConfig,
       withState: options.stateChecked,
       hevmContractAddress: createKeccakHash("keccak256")
@@ -37,10 +38,18 @@ async function startMacroDebugger(sourceDirectory, currentFile, imports, macro, 
     // Compilable macro is the huff source code for our new macro object
     const compilableMacro = createCompiledMacro(sourceDirectory, macro, argsObject, currentFile, imports);
     
-    const {bytecode, runtimeBytecode} = compileMacro(compilableMacro)
+    const bytecode = compileFromFile(compilableMacro, "cache/macro.huff", sourceDirectory);
+    const runtimeBytecode = deployContract(bytecode, config, sourceDirectory);
+
+    // const {bytecode, runtimeBytecode} = compileMacro(compilableMacro)
 
     // deploy the contract to get the runtime code
     runMacroDebugger(bytecode, runtimeBytecode, config, sourceDirectory);
+    } catch (e) {
+      registerError(e, "Macro Compilation Error, this is pre-release software, please report this issue to the huff team in the discord");
+      return null;
+    }
+   
   }
 
 /**Create compiled macro
@@ -63,12 +72,20 @@ function createCompiledMacro(cwd, macro, argsObject, currentFile, imports) {
     //TODO: strip out other main macros with regex - clean up all regex
     const paths = imports.map(importPath => `${cwd}/${dirPath}${importPath.replace(/#include\s?"./, "").replace('"', "")}`);
     paths.push(cwd+ "/" + currentFile);
+    console.log(paths)
     const files = paths.map(path => fs.readFileSync(path)
       .toString()
       .replace(/#define\s?macro\s?MAIN[\s\S]*?{[\s\S]*?}/gsm, "") // remove main
+      .replace(/#include\s".*"/gsm, "") // remove include
   );
 
-    const compilableMacro = `#include "../${currentFile}"
+  console.log("files")
+  console.log(files)
+  console.log("each")
+  console.log(files.forEach(console.log))
+
+  // //#include "../${currentFile}" - was the top line - do i need it if not compiling from files?
+    const compilableMacro = `
 ${files.join("\n")}
 #define macro MAIN() = takes(0) returns (0) {
   ${argsObject.join(" ")}
@@ -80,8 +97,6 @@ ${files.join("\n")}
 }
 
 
-
-  
 function runMacroDebugger(bytecode, runtimeBytecode, config, cwd) {
   // extract state
   const { withState, hevmContractAddress, hevmCaller, statePath } = config;  

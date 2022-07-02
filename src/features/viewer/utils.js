@@ -3,7 +3,6 @@ const commandExists = require("command-exists");
 const fs = require("fs");
 const {execSync} = require("child_process");
 const {default: compileHuff} = require("huffc");
-const { getImports } = require("../utils");
 
 
 /**Deploy Contract
@@ -61,7 +60,7 @@ function writeHevmCommand(command, file, cwd){
     catch (e) {fs.mkdirSync(`${cwd}/cache`) }
     
     // TODO: use file
-    fs.writeFileSync(`${cwd}/cache/hevmtemp`, command);
+    fs.writeFileSync(`${cwd}/${file}`, command);
 }
 
 function checkStateRepoExistence(statePath, cwd) {
@@ -108,19 +107,6 @@ function checkStateRepoExistence(statePath, cwd) {
 function compile(sourceDirectory, fileName) {
     console.log("Compiling contract...")
 
-    // hack - relative imports would not work, force flatten
-    // let fileText = fs.readFileSync(`${sourceDirectory}/${fileName}`).toString();
-    // const flatten = getImports(fileText).map(file => fs.readFileSync(file.replace(`#include ".`, `${sourceDirectory}`).replace('"','')).toString()).join("\n")
-    // fileText = fileText.replace(/#include.*$/gm, '')
-    // fileText = flatten.concat(fileText);
-
-    // console.log(fileText)
-    // const { bytecode} = compileHuff({
-    //     filePath: "",
-    //     generateAbi: true,
-    //     content: fileText
-    // })
-
     // having issues with the function level debugger
     const command = `huffc ${fileName} --bytecode`
     console.log(command)
@@ -141,16 +127,35 @@ function compile(sourceDirectory, fileName) {
  */
  const compileMacro = (source) => {
     const { bytecode, runtimeBytecode} = compileHuff({
-      filePath: "",
-      generateAbi: false,
-      content: source
-    })
-
-    return {
-      bytecode: `0x${bytecode.toString()}`,
-      runtimeBytecode: `0x${runtimeBytecode.toString()}`
-    }
+        filePath: "",
+        generateAbi: false,
+        content: source
+        })
+    
+        return {
+        bytecode: `0x${bytecode.toString()}`,
+        runtimeBytecode: `0x${runtimeBytecode.toString()}`
+        }      
 }
+
+function compileFromFile(source, filename, cwd) {
+    writeHevmCommand(source, filename, cwd);
+    const command = `huffc ${filename} --bytecode`
+    const bytecode = execSync(command, {cwd: cwd});
+    return `0x${bytecode.toString()}`;
+}
+
+/**Write source to temp file
+ * 
+ * @param {String} source 
+ * @param {String} filename 
+ * @param {String} cwd 
+ */
+function createTempFile(source, filename, cwd){
+    fs.writeFileSync(`${cwd}/${filename}`, source);
+}
+
+
 
 
 /**Write Macro
@@ -176,15 +181,52 @@ async function checkHevmInstallation() {
     try{
         await commandExists("hevm");
         return true;
-    } catch (e){
-        //TODO: Show something to the user that lets them know that hevm is not installed and
-        // that they are required to install it
-        
-        vscode.window.showErrorMessage(
+    } catch (e){ 
+        registerError(
+            e,
             "Hevm installation required - install here: https://github.com/dapphub/dapptools#installation"
-        )
+        )       
         return false;
     }
+}
+
+/**Check huff installation
+ * 
+ * Uses command-exists package to check for huffc installation
+ * This is required until web assembly version is created
+ * @returns 
+ */
+async function checkHuffcInstallation() {
+    try{
+        await commandExists("huffc");
+        return true;
+    } catch (e){ 
+        registerError(
+            e,
+            "Huffc compiler installation required - install here: https://github.com/huff-language/huff-rs"
+        )       
+        return false;
+    }
+}
+
+async function checkInstallations(){
+    const results = await Promise.all([
+        checkHevmInstallation(),
+        checkHuffcInstallation
+    ]);
+    return results.every(result => result);
+}
+
+/**Register Error
+ * 
+ * Log an error and display it to the user
+ * 
+ * @param {Exception} e 
+ * @param {String} message 
+ */
+async function registerError(e, message) {
+    vscode.window.showErrorMessage(`${message}\nError Message:\n${e}`);
+    console.error(e);
 }
 
 
@@ -193,9 +235,11 @@ module.exports = {
     runInUserTerminal,
     compile,
     writeMacro,
-    checkHevmInstallation,
     writeHevmCommand,
     resetStateRepo,
     checkStateRepoExistence,
-    compileMacro
+    compileMacro,
+    registerError,
+    compileFromFile,
+    checkInstallations
 }

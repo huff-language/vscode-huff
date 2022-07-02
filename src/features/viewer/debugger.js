@@ -1,10 +1,8 @@
-const vscode = require("vscode");
 const ethers = require("ethers"); 
 const fs = require("fs");
-const {execSync} = require("child_process");
 const { AbiCoder } = require("ethers/lib/utils");
 const { hevmConfig } = require("../../options");
-const { deployContract, checkHevmInstallation, runInUserTerminal, compile, writeHevmCommand, resetStateRepo, compileMacro } = require("./utils");
+const { deployContract, runInUserTerminal, compile, writeHevmCommand, resetStateRepo, compileMacro, registerError, compileFromFile, checkInstallations } = require("./utils");
 
 
 // TODO: must install the huffc compiler if it does not exists on the system
@@ -18,31 +16,40 @@ const { deployContract, checkHevmInstallation, runInUserTerminal, compile, write
  * @param {Object} options Options - not explicitly defined 
  */
 async function startDebugger(sourceDirectory, currentFile, imports, functionSelector, argsArray, options={state:true}){
-  if (!(await checkHevmInstallation())) return;
+  try {
+    if (!(await checkInstallations())) return;
+    
 
+    // Create deterministic deployment address for each contract for the deployed contract
+    const config = {
+      ...hevmConfig,
   
-  // Create deterministic deployment address for each contract for the deployed contract
-  const config = {
-    ...hevmConfig,
+      //TODO: convert this to NOT use ethers to reduce extensions footprint
+      hevmContractAddress: ethers.utils.keccak256(Buffer.from(currentFile)).toString().slice(0,42),
+    }
+  
+    const calldata = await prepareDebugTransaction(functionSelector, argsArray, config);
+    const compilableFile = compileFile(sourceDirectory, currentFile, imports);
 
-    //TODO: convert this to NOT use ethers to reduce extensions footprint
-    hevmContractAddress: ethers.utils.keccak256(Buffer.from(currentFile)).toString().slice(0,42),
+    // TODO: remove this
+    writeHevmCommand(compilableFile, "cache/check", sourceDirectory);
+
+    const bytecode = compileFromFile(compilableFile, "cache/macro.huff", sourceDirectory);
+    const runtimeBytecode = deployContract(bytecode, config, sourceDirectory);
+    
+    //TODO: make this only happen with the state option set!
+    // if (options.state){
+      // create the state repository if it does not exist yet
+      if (config.statePath && !fs.existsSync(config.statePath)){
+        resetStateRepo(config.statePath, sourceDirectory)}
+    // }
+  
+    runDebugger(runtimeBytecode, calldata,  options, config, sourceDirectory)
   }
-
-  const calldata = await prepareDebugTransaction(functionSelector, argsArray, config);
-  const compilableFile = compileFile(sourceDirectory, currentFile, imports);
-
-  const {bytecode, runtimeBytecode} = compileMacro(compilableFile)
-  
-
-  //TODO: make this only happen with the state option set!
-  // if (options.state){
-    // create the state repository if it does not exist yet
-    if (config.statePath && !fs.existsSync(config.statePath)){
-      resetStateRepo(config.statePath, sourceDirectory)}
-  // }
-
-  runDebugger(runtimeBytecode, calldata,  options, config, sourceDirectory)
+  catch (e) {
+    registerError(e, "Compilation failed, please contact the team in the huff discord");
+    return null
+  }
 }
 
 function compileFile(cwd, currentFile, imports){
@@ -50,10 +57,11 @@ function compileFile(cwd, currentFile, imports){
   const paths = imports.map(importPath => `${cwd}/${dirPath}${importPath.replace(/#include\s?"./, "").replace('"', "")}`);
   paths.push(cwd+ "/" + currentFile);
   const files = paths.map(path => fs.readFileSync(path)
-    .toString()
+      .toString()
   );
 
-  return `${files.join("\n")}`;
+  // remove include
+  return `${files.join("\n")}`.replace(/#include\s".*"/gsm, "");
 }
 
   

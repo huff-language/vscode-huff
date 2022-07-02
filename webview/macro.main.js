@@ -48,7 +48,8 @@
         const message = event.data; // The json data that the extension sent
         switch (message.type) {
             case 'receiveMacros': {
-                addOptionsToMacroSelector(message.data)
+                addOptionsToMacroSelector(message.data);
+
                 break;
             }
         }
@@ -67,7 +68,7 @@
         var functionSelectorDropdown = document.getElementById("macro-select");
         
         // listen for changes in the function that is selected
-        functionSelectorDropdown.addEventListener("change", (event) => createStackInputs(event))
+        functionSelectorDropdown.addEventListener("click", (event) => createStackInputs(event));
 
         // add each function as a drop down option
         for (const macro of Object.keys(_macroDefinitions)){
@@ -76,6 +77,8 @@
             functionSelectorDropdown.add(option); 
         }
 
+        // select the first macro
+        functionSelectorDropdown.click();
     }
 
     function createStackInputs(event){
@@ -95,7 +98,7 @@
             // allow for user input to the stack items
             input.addEventListener("change", (e)=> {
                 
-                // TODO: some input validation                
+                // TODO: some input validation - regex check for a hex value
                 input.value = e.target.value;
             })
 

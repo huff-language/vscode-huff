@@ -72,7 +72,7 @@ function getFunctionSignaturesAndArgs(content){
 
 function getMacros(content){
     //takes(?<takes>[^\)]*)\)
-    const macroRegex = /#define\s+macro\s+(?<name>[^\(\s]+)\s?\(\)\s?=\s?takes\s?\((?<takes>[\d])\)\s?returns\s?\((?<returns>[\d])\)\s?{(?<body>[\s\S]*?(?=}))/gsm;
+    const macroRegex = /#define\s+macro\s+(?<name>[^\(\s]+)\s?\((?<args>[^\)]*)\)\s?=\s?takes\s?\((?<takes>[\d])\)\s?returns\s?\((?<returns>[\d])\)\s?{(?<body>[\s\S]*?(?=}))/gsm;
     let match;
     let macros = {};
     
