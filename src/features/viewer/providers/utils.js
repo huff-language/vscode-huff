@@ -1,3 +1,5 @@
+const vscode = require("vscode");
+
 /**Get Nonce()
  * 
  * Provide a nonce when running webview
@@ -13,6 +15,37 @@ function getNonce() {
 	return text;
 }
 
+
+
+function checkCalldataIsHex(val){
+	if (!isHex(val)){
+		vscode.window.showErrorMessage(`Could not run debugger.\nProvided calldata value ${val} is not hex, please convert to hex and try again.`);
+		return false;
+	}
+	return true;
+}
+
+function checkInputIsHex(argsArr){
+	for (const arg of argsArr){
+		if (!isHex(arg)){
+    		vscode.window.showErrorMessage(`Could not run debugger.\nStack input ${arg} is not hex, please convert to hex and try again.`);
+			return false;
+		}
+	}
+	return true;
+}
+
+/**Is Hex
+ * 
+ * @param {String} val 
+ * @returns {Boolean} the calldata to be called with
+ */
+function isHex(val){
+	return Boolean(val.match(/^0x[0-9a-f]+$/i))
+}
+
 module.exports = {
-    getNonce
+    getNonce,
+	checkInputIsHex,
+	checkCalldataIsHex
 }

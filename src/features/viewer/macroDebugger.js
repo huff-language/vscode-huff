@@ -3,7 +3,7 @@ const createKeccakHash = require('keccak');
 const fs = require("fs");
 const {execSync} = require("child_process");
 const { hevmConfig } = require("../../options");
-const { deployContract, writeMacro, runInUserTerminal, writeHevmCommand, compileMacro, registerError, compileFromFile, checkInstallations} = require("./utils");
+const { deployContract, writeMacro, runInUserTerminal, writeHevmCommand, compileMacro, registerError, compileFromFile, checkInstallations, formatEvenBytes} = require("./utils");
 
 /**Start Macro Debugger
  * 
@@ -26,15 +26,15 @@ async function startMacroDebugger(sourceDirectory, currentFile, imports, macro, 
     try {
        // Create deterministic deployment address for each contract
       const config = {
-      ...hevmConfig,
-      withState: options.stateChecked,
-      hevmContractAddress: createKeccakHash("keccak256")
-                            .update(Buffer.from(macro.toString()))
-                            .digest("hex")
-                            .toString("hex")
-                            .slice(0,42),
+        ...hevmConfig,
+        ...options,
+        hevmContractAddress: createKeccakHash("keccak256")
+                              .update(Buffer.from(macro.toString()))
+                              .digest("hex")
+                              .toString("hex")
+                              .slice(0,42),
     }
-  
+
     // Compilable macro is the huff source code for our new macro object
     const compilableMacro = createCompiledMacro(sourceDirectory, macro, argsObject, currentFile, imports);
     
@@ -72,17 +72,11 @@ function createCompiledMacro(cwd, macro, argsObject, currentFile, imports) {
     //TODO: strip out other main macros with regex - clean up all regex
     const paths = imports.map(importPath => `${cwd}/${dirPath}${importPath.replace(/#include\s?"./, "").replace('"', "")}`);
     paths.push(cwd+ "/" + currentFile);
-    console.log(paths)
     const files = paths.map(path => fs.readFileSync(path)
       .toString()
       .replace(/#define\s?macro\s?MAIN[\s\S]*?{[\s\S]*?}/gsm, "") // remove main
       .replace(/#include\s".*"/gsm, "") // remove include
   );
-
-  console.log("files")
-  console.log(files)
-  console.log("each")
-  console.log(files.forEach(console.log))
 
   // //#include "../${currentFile}" - was the top line - do i need it if not compiling from files?
     const compilableMacro = `
@@ -99,19 +93,27 @@ ${files.join("\n")}
 
 function runMacroDebugger(bytecode, runtimeBytecode, config, cwd) {
   // extract state
-  const { withState, hevmContractAddress, hevmCaller, statePath } = config;  
+  const { 
+    stateChecked, 
+    hevmContractAddress, 
+    hevmCaller, 
+    statePath, 
+    calldataChecked,
+    calldataValue 
+  } = config;  
   
   // If state is provided, we need to deploy the contract and persist constructor storage
-  if (withState) {
+  if (stateChecked) {
     deployContract(bytecode, config, cwd);
   }
 
   const command = `hevm exec \
     --code ${runtimeBytecode.toString()} \
-    --address ${config.hevmContractAddress} \
-    --caller ${config.hevmCaller} \
+    --address ${hevmContractAddress} \
+    --caller ${hevmCaller} \
     --gas 0xffffffff \
-    ${withState ? "--state " + cwd + "/" + config.statePath : ""} \
+    ${stateChecked ? "--state " + cwd + "/" + statePath : ""} \
+    ${calldataChecked ? "--calldata " + formatEvenBytes(calldataValue) : ""} \
     --debug`
 
     // command is cached into a file as execSync has a limit on the command size that it can execute

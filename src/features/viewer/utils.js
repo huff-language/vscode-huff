@@ -59,8 +59,13 @@ function writeHevmCommand(command, file, cwd){
     try { !fs.accessSync(`${cwd}/cache`) }
     catch (e) {fs.mkdirSync(`${cwd}/cache`) }
     
-    // TODO: use file
     fs.writeFileSync(`${cwd}/${file}`, command);
+}
+
+
+function purgeCache(cwd){
+    try { fs.rmSync(`${cwd}/cache`, {recursive:true}) }
+    catch (e){console.log("Cache didn't exist")};
 }
 
 function checkStateRepoExistence(statePath, cwd) {
@@ -78,7 +83,6 @@ function checkStateRepoExistence(statePath, cwd) {
  */
  function resetStateRepo(statePath, cwd) {
     console.log("Creating state repository...")
-    console.log(cwd)
     
     const fullPath = cwd + "/" + statePath;
     
@@ -109,8 +113,6 @@ function compile(sourceDirectory, fileName) {
 
     // having issues with the function level debugger
     const command = `huffc ${fileName} --bytecode`
-    console.log(command)
-    console.log(sourceDirectory)
     const bytecode = execSync(command, {cwd: sourceDirectory});
     return `0x${bytecode.toString()}`;
 }
@@ -154,8 +156,6 @@ function compileFromFile(source, filename, cwd) {
 function createTempFile(source, filename, cwd){
     fs.writeFileSync(`${cwd}/${filename}`, source);
 }
-
-
 
 
 /**Write Macro
@@ -229,6 +229,17 @@ async function registerError(e, message) {
     console.error(e);
 }
 
+/**Format even bytes
+ * Format a hex literal to make its length even
+ * @param {String} bytes
+ */
+const formatEvenBytes = (bytes) => {
+	if (bytes.length % 2) {
+	  return bytes.replace("0x", "0x0");
+	}
+	return bytes;
+};
+
 
 module.exports = {
     deployContract,
@@ -241,5 +252,7 @@ module.exports = {
     compileMacro,
     registerError,
     compileFromFile,
-    checkInstallations
+    checkInstallations,
+    purgeCache,
+    formatEvenBytes
 }

@@ -1,6 +1,6 @@
 const vscode = require("vscode");
 
-const {getNonce} = require("./utils");
+const {getNonce, checkInputIsHex, checkCalldataIsHex} = require("./utils");
 const {getMacros, getImports} = require("../../utils");
 const {startMacroDebugger} = require("../macroDebugger");
 
@@ -41,7 +41,11 @@ class MacroDebuggerViewProvider{
                     break;
                 }
                 case "start-macro-debug": {
-                    const {macro, argsArr, stateChecked} = data.values;
+                    const {macro, argsArr, stateChecked, calldataChecked, calldataValue} = data.values;
+                    
+                    // Prevent debugging and show an error message if the stack inputs are not hex
+                    if (!checkInputIsHex(argsArr)) break;
+                    if (calldataChecked &&!checkCalldataIsHex(calldataValue)) break;
 
                     // get required file imports to flatten the file
                     const imports = getImports(vscode.window.activeTextEditor?.document.getText())
@@ -54,7 +58,9 @@ class MacroDebuggerViewProvider{
                         macro, 
                         argsArr, 
                         {
-                            stateChecked
+                            stateChecked,
+                            calldataChecked,
+                            calldataValue
                         });
                 }
             }
@@ -105,13 +111,20 @@ class MacroDebuggerViewProvider{
                         <select id="macro-select">
                         </select>
 
-                        <ul class="stack-items">
-                        </ul>
+                        <ol class="stack-items">
+                        </ol>
 
                         <!-- Have a checkbox button to operate with state -->
                         <form>
                             <input class="state-checkbox" type="checkbox" id="state-checkbox" name="state-checkbox" value="debug-mode">
                             <label for="state-checkbox">Run Constructor First</label>
+                            </br>
+                            
+                            <input class="calldata-checkbox" type="checkbox" id="calldata-checkbox" name="calldata-checkbox">
+                            <label for="calldata-checkbox">With Calldata</label>
+                            </br>
+                            <input class="calldata-input" type="text" id="calldata-input" value="Enter Calldata">
+                            <label for="calldata-input">Start Debug</label>
                         </form>
 
                         <button class="start-debug">Start Debug</button>

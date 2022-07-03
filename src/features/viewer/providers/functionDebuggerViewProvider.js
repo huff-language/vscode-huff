@@ -113,8 +113,8 @@ class DebuggerViewProvider{
                         <select id="function-select">
                         </select>
 
-                        <ul class="args-inputs">
-                        </ul>
+                        <ol class="args-inputs">
+                        </ol>
                         
                         <button class="start-debug">Start Debug</button>
                         

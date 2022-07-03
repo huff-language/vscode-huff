@@ -2,8 +2,7 @@ const ethers = require("ethers");
 const fs = require("fs");
 const { AbiCoder } = require("ethers/lib/utils");
 const { hevmConfig } = require("../../options");
-const { deployContract, runInUserTerminal, compile, writeHevmCommand, resetStateRepo, compileMacro, registerError, compileFromFile, checkInstallations } = require("./utils");
-
+const { deployContract, runInUserTerminal, compile, writeHevmCommand, resetStateRepo, compileMacro, registerError, compileFromFile, checkInstallations, purgeCache } = require("./utils");
 
 // TODO: must install the huffc compiler if it does not exists on the system
 
@@ -30,9 +29,6 @@ async function startDebugger(sourceDirectory, currentFile, imports, functionSele
   
     const calldata = await prepareDebugTransaction(functionSelector, argsArray, config);
     const compilableFile = compileFile(sourceDirectory, currentFile, imports);
-
-    // TODO: remove this
-    writeHevmCommand(compilableFile, "cache/check", sourceDirectory);
 
     const bytecode = compileFromFile(compilableFile, "cache/macro.huff", sourceDirectory);
     const runtimeBytecode = deployContract(bytecode, config, sourceDirectory);
@@ -103,24 +99,28 @@ function runDebugger(bytecode, calldata, flags, config, cwd) {
  */
 async function prepareDebugTransaction(functionSelector, argsObject, config){
     console.log("Preparing debugger calldata...")
-    if (argsObject.length == 0) return `0x${functionSelector[0]}`;
+    try {
+      if (argsObject.length == 0) return `0x${functionSelector[0]}`;
 
-    // TODO: error handle with user prompts
-    const abiEncoder = new AbiCoder()
-
-    // create interface readable by the abi encoder
-    let type = [];
-    let value = [];
-    argsObject.forEach(arg => {
-      type.push(arg[0]);
-      value.push(arg[1]);
-    });
-
-    const encoded = abiEncoder.encode(type,value);
-
-    return `0x${functionSelector[0]}${encoded.slice(2, encoded.length)}`
+      // TODO: error handle with user prompts
+      const abiEncoder = new AbiCoder()
+  
+      // create interface readable by the abi encoder
+      let type = [];
+      let value = [];
+      argsObject.forEach(arg => {
+        type.push(arg[0]);
+        value.push(arg[1]);
+      });
+  
+      const encoded = abiEncoder.encode(type,value);
+  
+      return `0x${functionSelector[0]}${encoded.slice(2, encoded.length)}`
+    
+    } catch (e){
+      registerError(e, `Compilation failed\nSee\n${e}`);
+    }
 }
-
 
 module.exports = {
   startDebugger

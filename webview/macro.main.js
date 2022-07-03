@@ -3,7 +3,13 @@
 (function () {
     const vscode = acquireVsCodeApi();
 
-    const oldState = vscode.getState() || { macroDefinitions: [] };
+    const oldState = vscode.getState() || { 
+        macroDefinitions: [],
+        stackValues: {},
+        showCalldata: false,
+        calldataValue: "",
+        runConstructorFirst: false
+    };
 
     /** @type {Array<{ value: string }>} */
     let macroDefinitions = oldState.macroDefinitions || [];
@@ -20,6 +26,35 @@
             prepareDebugSession();
     })
 
+    const calldataInput = document.getElementById("calldata-input");
+    const calldataChecked = document.getElementById("input[name=calldata-checkbox]:checked");
+    const calldataCheckbox = document.getElementById("calldata-checkbox");
+    
+    if (oldState.showCalldata){
+        calldataInput.style.display = "block"
+        calldataCheckbox.checked = true;
+    } else {
+        calldataInput.style.display = "none"
+        calldataCheckbox.checked = false;
+    } 
+
+    calldataCheckbox.addEventListener("click", (e) => {
+        e.target.checked 
+            ? calldataInput.style.display = "block"
+            : calldataInput.style.display = "none"
+        
+        vscode.setState({...vscode.getState() ,showCalldata: e.target.checked});
+    })
+
+    // Set calldatavalue to saved value
+    calldataInput.value = oldState.calldataValue;
+    // Handle entering calldata
+    function handleKeyPress(e){
+        vscode.setState({...vscode.getState(), calldataValue: e.target.value});
+    }
+    calldataInput.addEventListener("keypress", handleKeyPress);
+    calldataInput.addEventListener("change", handleKeyPress);
+
 
     function prepareDebugSession(){
         // Get the currently selected function selector
@@ -32,13 +67,19 @@
                 input => argsArr.push(input.value)))
 
         // get state checkbox value
-        const checked = document.querySelector(".state-checkbox").checked;
+        const stateChecked = document.querySelector(".state-checkbox").checked;
 
+        // Allow macro's to be spoofed with calldata
+        const calldataChecked = document.querySelector(".calldata-checkbox").checked;
+        const calldataValue = document.getElementById("calldata-input").value;
+        
         // Send a message to the main extension to trigger the hevm session
         vscode.postMessage({type: "start-macro-debug", values: {
             macro: macroDefinitions[selectedMacro],
             argsArr,
-            stateChecked: checked
+            stateChecked,
+            calldataChecked,
+            calldataValue
         }})
     }
 
@@ -98,7 +139,6 @@
             // allow for user input to the stack items
             input.addEventListener("change", (e)=> {
                 
-                // TODO: some input validation - regex check for a hex value
                 input.value = e.target.value;
             })
 
@@ -109,6 +149,6 @@
             // Add list item to the list
             ul.appendChild(li);
         }
-    } 
+    }
 
 }());

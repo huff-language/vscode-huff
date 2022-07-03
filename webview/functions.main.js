@@ -104,7 +104,6 @@
             input.type = "text";
             input.addEventListener("change", (e)=> {
                 
-                // TODO: some input validation                
                 input.value = e.target.value;
             })
 
