@@ -1,6 +1,11 @@
 {
+<<<<<<< Updated upstream
   "name": "huff",
   "version": "0.0.3",
+=======
+  "name": "huff-language",
+  "version": "0.0.7",
+>>>>>>> Stashed changes
   "displayName": "huff",
   "description": "VSCode syntax highlighting for huff programming language.",
   "keywords": [
