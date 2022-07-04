@@ -2,7 +2,6 @@ const vscode = require("vscode");
 const commandExists = require("command-exists");
 const fs = require("fs");
 const {execSync} = require("child_process");
-const {default: compileHuff} = require("huffc");
 
 
 /**Deploy Contract
@@ -68,8 +67,7 @@ function purgeCache(cwd){
 }
 
 function checkStateRepoExistence(statePath, cwd) {
-    try { !fs.accessSync(`${cwd}/${statePath}`) }
-    catch (e) { resetStateRepo(statePath, cwd) }
+    resetStateRepo(statePath, cwd)
 }
 
 /**Reset state repo
@@ -84,6 +82,7 @@ function checkStateRepoExistence(statePath, cwd) {
     console.log("Creating state repository...")
     
     const fullPath = cwd + "/" + statePath;
+    console.log(fullPath)
     
     // delete old state
     try{ fs.rmSync(fullPath, {recursive:true}) } 
@@ -117,27 +116,6 @@ function compile(sourceDirectory, fileName) {
 }
 
 
-/**Compile Macro
- * 
- * TODO: don't assume that the current macro is located at cache/tempMacro.huff
- * 
- * Returns the compiled macro's bytecode
- * 
- * @param {String} source Macro sourcecode
- * @returns {String} bytecode - Bytecode string returned by the huff compiler
- */
- const compileMacro = (source) => {
-    const { bytecode, runtimeBytecode} = compileHuff({
-        filePath: "",
-        generateAbi: false,
-        content: source
-        })
-    
-        return {
-        bytecode: `0x${bytecode.toString()}`,
-        runtimeBytecode: `0x${runtimeBytecode.toString()}`
-        }      
-}
 
 function compileFromFile(source, filename, cwd) {
     writeHevmCommand(source, filename, cwd);
@@ -251,7 +229,6 @@ module.exports = {
     writeHevmCommand,
     resetStateRepo,
     checkStateRepoExistence,
-    compileMacro,
     registerError,
     compileFromFile,
     checkInstallations,

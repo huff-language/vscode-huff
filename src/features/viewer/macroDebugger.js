@@ -3,7 +3,7 @@ const createKeccakHash = require('keccak');
 const fs = require("fs");
 const {execSync} = require("child_process");
 const { hevmConfig } = require("../../options");
-const { deployContract, writeMacro, runInUserTerminal, writeHevmCommand, compileMacro, registerError, compileFromFile, checkInstallations, formatEvenBytes} = require("./utils");
+const { deployContract, writeMacro, runInUserTerminal, writeHevmCommand, compileMacro, registerError, compileFromFile, checkInstallations, formatEvenBytes, purgeCache} = require("./utils");
 
 /**Start Macro Debugger
  * 

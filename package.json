@@ -123,7 +123,6 @@
   "dependencies": {
     "@vscode/webview-ui-toolkit": "^1.0.0",
     "command-exists": "^1.2.9",
-    "keccak": "^3.0.2",
-    "huffc": "Saw-mon-and-Natalie/huffc.git#fileless-parser"
+    "keccak": "^3.0.2"
   }
 }
