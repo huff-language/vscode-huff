@@ -58,7 +58,6 @@ function writeHevmCommand(command, file, cwd){
     
     try { !fs.accessSync(`${cwd}/cache`) }
     catch (e) {fs.mkdirSync(`${cwd}/cache`) }
-
     fs.writeFileSync(`${cwd}/${file}`, command);
 }
 
