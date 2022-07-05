@@ -1,5 +1,5 @@
 const vscode = require("vscode");
-const { functionSignatureExtractor, eventSignatureExtractor, toUpperSnakeCase } = require("./utils");
+const { functionSignatureExtractor, eventSignatureExtractor, toUpperSnakeCase } = require("./regexUtils");
 
 /**Generate switch table
  * 

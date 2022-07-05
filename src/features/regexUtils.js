@@ -14,7 +14,12 @@ const createKeccakHash = require('keccak');
     return signatureExtractor(content, publicFuncSigRegex, 8)
 }
 
-// create a function that can perform both of these as one
+/**Event Signature Extractor
+ * 
+ * Get all of the events defined within the current file
+ * @param {String} content 
+ * @returns 
+ */
 function eventSignatureExtractor(content){
     const interfaceFuncSigRegex = /event\s+(?<name>[^\(\s]+)\s?\((?<args>[^\)]*)\)/g;
 
@@ -50,6 +55,71 @@ function signatureExtractor(content, matchPattern, returnLength=64){
 
     return {sigHashes, collisions}
 }
+
+/**Get Function Signature and args
+ * 
+ * Parse all of the function definitions for the current file
+ * @param {String} content 
+ * @returns 
+ */
+function getFunctionSignaturesAndArgs(content){
+    const publicFuncSigRegex = /function\s+(?<name>[^\(\s]+)\s?\((?<args>[^\)]*)\)/g;
+    // const publicFuncSigRegex = /function\s+(?<name>[^\(\s]+)\s?\((?<args>[^\)]*)\).*(public|external)?/g;
+    let match;
+    let sighashes = {};
+    let collisions = [];
+
+    while (match = publicFuncSigRegex.exec(content)){
+        let args = (match.groups.args.length) ? match.groups.args.replace(commentRegex(), "").split(",").map(item => canonicalizeEvmType(item.trim().split(" ")[0])) : [];
+        let fnSig = `${match.groups.name.trim()}(${args.join(",")})`;
+        let sigHash = createKeccakHash('keccak256').update(fnSig).digest("hex").toString("hex").slice(0,8);
+        if (sigHash in sighashes && sighashes[sigHash] !== fnSig){
+            collisions.push(sigHash);
+        }
+        sighashes[sigHash] = {fnSig, args};
+    }
+    return {sighashes, collisions}
+}
+
+/**Get Macros
+ * 
+ * Get all of the macro definitions in the current file
+ * @param {String} content 
+ * @returns {Object}
+ */
+function getMacros(content){
+    //takes(?<takes>[^\)]*)\)
+    const macroRegex = /#define\s+macro\s+(?<name>[^\(\s]+)\s?\((?<args>[^\)]*)\)\s?=\s?takes\s?\((?<takes>[\d])\)\s?returns\s?\((?<returns>[\d])\)\s?{(?<body>[\s\S]*?(?=}))/gsm;
+    let match;
+    let macros = {};
+    
+    // find all of the macros and add them to the return object
+    while (match = macroRegex.exec(content)){
+        const {name, takes, returns, body} = match.groups;
+        macros[name] = { takes, returns, body }
+    }
+    return macros;
+}
+
+/**Get Imports
+ * 
+ * Get all of the include statements in the current file
+ * @param {String} content 
+ * @returns 
+ */
+function getImports(content){
+    const importRegex = /#include\s+(?<file>[^\(\s]+)/gm;
+
+    let match;
+    let imports = [];
+    
+    while (match = importRegex.exec(content)){
+        // get the match pattern
+        imports.push(match[0]);
+    }
+    return imports;
+}
+
 
 /**Camel to Snake Case
  * 
@@ -111,5 +181,9 @@ const toUpperSnakeCase = str => camelToSnakeCase(splitCaps(str)).toUpperCase();
 module.exports = {
     functionSignatureExtractor,
     eventSignatureExtractor,
-    toUpperSnakeCase
+    toUpperSnakeCase,
+    camelToSnakeCase,
+    getFunctionSignaturesAndArgs,
+    getMacros,
+    getImports
 }
