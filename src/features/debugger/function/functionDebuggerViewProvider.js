@@ -1,7 +1,7 @@
 const vscode = require("vscode");
 
-const {getNonce} = require("./utils");
-const {startDebugger} = require("../debugger");
+const {getNonce} = require("../providerUtils");
+const {startDebugger} = require("./debugger");
 const {getFunctionSignaturesAndArgs, getImports} = require("../../utils");
 
 
@@ -82,11 +82,11 @@ class DebuggerViewProvider{
 
     getHtmlForWebView(webview) {
         // local path of main script to run in the webview
-        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "functions.main.js"));
+        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "function", "functions.main.js"));
 
         // Do the same for the stylesheet
-        const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "vscode.css"));
-        const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "main.css"));
+        const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "css", "vscode.css"));
+        const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview","css", "main.css"));
 
         // Use nonce to allow only a specific script to be run
         const nonce = getNonce();

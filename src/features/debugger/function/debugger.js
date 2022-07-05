@@ -1,8 +1,9 @@
-const ethers = require("ethers"); 
 const fs = require("fs");
+
+// TODO: use a slimmer abicoder
 const { AbiCoder } = require("ethers/lib/utils");
-const { hevmConfig } = require("../../options");
-const { deployContract, runInUserTerminal, compile, writeHevmCommand, resetStateRepo, compileMacro, registerError, compileFromFile, checkInstallations, purgeCache } = require("./utils");
+const { hevmConfig } = require("../../../options");
+const { deployContract, runInUserTerminal, writeHevmCommand, resetStateRepo, registerError, compileFromFile, checkInstallations, purgeCache } = require("../debuggerUtils");
 
 // TODO: must install the huffc compiler if it does not exists on the system
 
@@ -21,10 +22,12 @@ async function startDebugger(sourceDirectory, currentFile, imports, functionSele
 
     // Create deterministic deployment address for each contract for the deployed contract
     const config = {
-      ...hevmConfig,
-  
-      //TODO: convert this to NOT use ethers to reduce extensions footprint
-      hevmContractAddress: ethers.utils.keccak256(Buffer.from(currentFile)).toString().slice(0,42),
+      ...hevmConfig,  
+      hevmContractAddress: createKeccakHash("keccak256")
+        .update(Buffer.from(macro.toString()))
+        .digest("hex")
+        .toString("hex")
+        .slice(0,42)
     }
   
     const calldata = await prepareDebugTransaction(functionSelector, argsArray, config);

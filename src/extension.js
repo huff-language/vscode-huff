@@ -6,8 +6,8 @@ const { LANGUAGE_ID } = require("./settings");
 let activeEditor;
 
 // View Providers
-const { MacroDebuggerViewProvider } = require("./features/viewer/providers/macroDebuggerViewProvider");
-const { DebuggerViewProvider } = require("./features/viewer/providers/functionDebuggerViewProvider");
+const { MacroDebuggerViewProvider } = require("./features/debugger/macro/macroDebuggerViewProvider");
+const { DebuggerViewProvider } = require("./features/debugger/function/functionDebuggerViewProvider");
 
 /**Activate
  * 

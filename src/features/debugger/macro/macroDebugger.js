@@ -1,9 +1,16 @@
-const vscode = require("vscode");
 const createKeccakHash = require('keccak');
 const fs = require("fs");
 const {execSync} = require("child_process");
-const { hevmConfig } = require("../../options");
-const { deployContract, writeMacro, runInUserTerminal, writeHevmCommand, compileMacro, registerError, compileFromFile, checkInstallations, formatEvenBytes, purgeCache} = require("./utils");
+const { hevmConfig } = require("../../../options");
+const { 
+  deployContract, 
+  runInUserTerminal, 
+  writeHevmCommand, 
+  registerError, 
+  compileFromFile, 
+  checkInstallations, 
+  formatEvenBytes, 
+} = require("../debuggerUtils");
 
 /**Start Macro Debugger
  * 
