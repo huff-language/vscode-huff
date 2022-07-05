@@ -1,6 +1,5 @@
 const createKeccakHash = require('keccak');
 const fs = require("fs");
-const {execSync} = require("child_process");
 const { hevmConfig } = require("../../../options");
 const { 
   deployContract, 
@@ -45,6 +44,7 @@ async function startMacroDebugger(sourceDirectory, currentFile, imports, macro, 
     // Compilable macro is the huff source code for our new macro object
     let compilableMacro = createCompiledMacro(sourceDirectory, macro, argsObject, currentFile, imports);
 
+    // Create a constructor that will set storage slots -> TODO: run this manually against hevm git repository
     if (config.storageChecked) compilableMacro = overrideStorage(compilableMacro, config);
 
     const bytecode = compileFromFile(compilableMacro, config.tempMacroFilename, sourceDirectory);
@@ -76,7 +76,6 @@ function createCompiledMacro(cwd, macro, argsObject, currentFile, imports) {
     const dirPath = currentFile.split("/").slice(0,-1).join("/")
 
     // flatten imports 
-    //TODO: strip out other main macros with regex - clean up all regex
     const paths = imports.map(importPath => `${cwd}/${dirPath}${importPath.replace(/#include\s?"./, "").replace('"', "")}`);
     paths.push(cwd+ "/" + currentFile);
     const files = paths.map(path => fs.readFileSync(path)
@@ -115,7 +114,7 @@ function runMacroDebugger(bytecode, runtimeBytecode, config, cwd) {
     deployContract(bytecode, config, cwd);
   }
 
-  const command = `hevm exec \
+  const hevmCommand = `hevm exec \
     --code ${runtimeBytecode.toString()} \
     --address ${hevmContractAddress} \
     --caller ${hevmCaller} \
@@ -125,14 +124,22 @@ function runMacroDebugger(bytecode, runtimeBytecode, config, cwd) {
     --debug`
 
     // command is cached into a file as execSync has a limit on the command size that it can execute
-    writeHevmCommand(command, config.tempHevmCommandFilename, cwd)
+    writeHevmCommand(hevmCommand, config.tempHevmCommandFilename, cwd)
 
     // TODO: run the debugger - attach this to a running terminal
-    runInUserTerminal("`cat " + cwd + "/" + config.tempHevmCommandFilename + "`");
-
+    const terminalCommand = "`cat " + cwd + "/" + config.tempHevmCommandFilename + "`"; 
+    runInUserTerminal(terminalCommand);
 }
 
-
+/**Override storage
+ * 
+ * As temp method this will override the storage using the contracts constructor
+ * The long term goal is to convert this method to alter hevms store directly
+ * 
+ * @param {String} macro 
+ * @param {Object} config 
+ * @returns 
+ */
 function overrideStorage(macro, config) {
   // write a temp file that will set storage slots
   const {stateValues} = config;

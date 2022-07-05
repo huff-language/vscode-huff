@@ -5,20 +5,18 @@ const { AbiCoder } = require("ethers/lib/utils");
 const { hevmConfig } = require("../../../options");
 const { deployContract, runInUserTerminal, writeHevmCommand, resetStateRepo, registerError, compileFromFile, checkInstallations, purgeCache } = require("../debuggerUtils");
 
-// TODO: must install the huffc compiler if it does not exists on the system
 
 /**Start function debugger 
  * 
- * @param {String} sourceDirectory The current working directory of selected files workspace
+ * @param {String} cwd The current working directory of selected files workspace
  * @param {String} currentFile The path to the currently selected file
  * @param {String} functionSelector The 4byte function selector of the transaction being debugged
  * @param {Array<Array<String>>} argsArray Each arg is provided in the format [type, value] so that they can easily be parsed with abi encoder
  * @param {Object} options Options - not explicitly defined 
  */
-async function startDebugger(sourceDirectory, currentFile, imports, functionSelector, argsArray, options={state:true}){
+async function startDebugger(cwd, currentFile, imports, functionSelector, argsArray, options={state:true}){
   try {
     if (!(await checkInstallations())) return;
-    
 
     // Create deterministic deployment address for each contract for the deployed contract
     const config = {
@@ -29,21 +27,23 @@ async function startDebugger(sourceDirectory, currentFile, imports, functionSele
         .toString("hex")
         .slice(0,42)
     }
-  
-    const calldata = await prepareDebugTransaction(functionSelector, argsArray, config);
-    const compilableFile = compileFile(sourceDirectory, currentFile, imports);
-
-    const bytecode = compileFromFile(compilableFile, config.tempMacroFilename, sourceDirectory);
-    const runtimeBytecode = deployContract(bytecode, config, sourceDirectory);
     
-    //TODO: make this only happen with the state option set!
-    // if (options.state){
-      // create the state repository if it does not exist yet
-      if (config.statePath && !fs.existsSync(config.statePath)){
-        resetStateRepo(config.statePath, sourceDirectory)}
-    // }
+    // Get calldata
+    const calldata = await encodeCalldata(functionSelector, argsArray);
+    
+    // Flatten file to prevent the need to file linking -> this will be required for a wasm implementation
+    const compilableFile = flattenFile(cwd, currentFile, imports);
+
+    // Compile binary using locally installed compiler - in the future this will be replaced with a wasm compiler
+    const bytecode = compileFromFile(compilableFile, config.tempMacroFilename, cwd);
+    
+    // Get runtime bytecode and run constructor logic
+    const runtimeBytecode = deployContract(bytecode, config, cwd);
+    
+    // Reset hevm state
+    resetStateRepo(config.statePath, cwd)
   
-    runDebugger(runtimeBytecode, calldata,  options, config, sourceDirectory)
+    runDebugger(runtimeBytecode, calldata,  options, config, cwd)
   }
   catch (e) {
     registerError(e, "Compilation failed, please contact the team in the huff discord");
@@ -51,7 +51,14 @@ async function startDebugger(sourceDirectory, currentFile, imports, functionSele
   }
 }
 
-function compileFile(cwd, currentFile, imports){
+/**Flatten File
+ * 
+ * @param {String} cwd 
+ * @param {String} currentFile 
+ * @param {Array<String>} imports declared file imports at the top of the current file 
+ * @returns 
+ */
+function flattenFile(cwd, currentFile, imports){
   const dirPath = currentFile.split("/").slice(0,-1).join("/")
   const paths = imports.map(importPath => `${cwd}/${dirPath}${importPath.replace(/#include\s?"./, "").replace('"', "")}`);
   paths.push(cwd+ "/" + currentFile);
@@ -63,17 +70,23 @@ function compileFile(cwd, currentFile, imports){
   return `${files.join("\n")}`.replace(/#include\s".*"/gsm, "");
 }
 
-  
+
+/**Run debugger
+ * 
+ * Craft hevm command and run it in the user terminal
+ * 
+ * @param {String} bytecode 
+ * @param {String} calldata 
+ * @param {Object} flags 
+ * @param {Object} config 
+ * @param {String} cwd 
+ */
 function runDebugger(bytecode, calldata, flags, config, cwd) {
   console.log("Entering debugger...")
   
-  if (flags){
-      if (flags.reset){
-        resetStateRepo(config.statePath)}
-  }
-  
-  // Command
-  const command = `hevm exec \
+
+  // Hevm Command
+  const hevmCommand = `hevm exec \
   --code ${bytecode} \
   --address ${config.hevmContractAddress} \
   --caller ${config.hevmCaller} \
@@ -83,12 +96,9 @@ function runDebugger(bytecode, calldata, flags, config, cwd) {
   ${calldata ? "--calldata " + calldata : ""}`
   
   // command is cached into a file as execSync has a limit on the command size that it can execute
-  
-  writeHevmCommand(command, config.tempHevmCommandFilename, cwd);
-  
-  // TODO: run the debugger - attach this to a running terminal
-  runInUserTerminal("`cat " + cwd + "/" + config.tempHevmCommandFilename +  "`");
-
+  writeHevmCommand(hevmCommand, config.tempHevmCommandFilename, cwd);  
+  const terminalCommand = "`cat " + cwd + "/" + config.tempHevmCommandFilename +  "`"
+  runInUserTerminal(terminalCommand);
 }
 
 
@@ -98,10 +108,9 @@ function runDebugger(bytecode, calldata, flags, config, cwd) {
  * 
  * @param {String} functionSelector 
  * @param {Array<Array<String>} argsObject 
- * @param {Object} config 
  * @returns 
  */
-async function prepareDebugTransaction(functionSelector, argsObject, config){
+async function encodeCalldata(functionSelector, argsObject){
     console.log("Preparing debugger calldata...")
     try {
       if (argsObject.length == 0) return `0x${functionSelector[0]}`;

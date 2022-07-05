@@ -116,7 +116,16 @@ function compile(sourceDirectory, fileName) {
 }
 
 
-
+/**Compile From File
+ * 
+ * Write `source` to a file then compile it with the 
+ * installed huffc compiler 
+ * 
+ * @param {String} source 
+ * @param {String} filename 
+ * @param {String} cwd 
+ * @returns 
+ */
 function compileFromFile(source, filename, cwd) {
     writeHevmCommand(source, filename, cwd);
     const command = `huffc ${filename} --bytecode`
@@ -189,6 +198,11 @@ async function checkHuffcInstallation() {
     }
 }
 
+/**Check Installations
+ * 
+ * Check for both hevm and huffc installations
+ * @returns {Promise<Boolean>} 
+ */
 async function checkInstallations(){
     const results = await Promise.all([
         checkHevmInstallation(),

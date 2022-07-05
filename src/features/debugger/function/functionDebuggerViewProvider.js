@@ -2,9 +2,14 @@ const vscode = require("vscode");
 
 const {getNonce} = require("../providerUtils");
 const {startDebugger} = require("./debugger");
-const {getFunctionSignaturesAndArgs, getImports} = require("../../utils");
+const {getFunctionSignaturesAndArgs, getImports} = require("../../regexUtils");
 
 
+/**Debugger View Provider
+ * 
+ * Interface between the vscode extension and the debug webview envs. 
+ * The two components communicate with each other via a message bus
+ */
 class DebuggerViewProvider{
 
     static viewType = "huff.debugView";
@@ -19,16 +24,18 @@ class DebuggerViewProvider{
         context,
         _token
     ){
-
+        // Enable scripting within the webview
         webviewView.webview.options = {
             enableScripts: true,
             localResourceRoots: [
                 this._extensionURI
             ]
         }
-
+        
+        // Set the webview's html - written inline
         webviewView.webview.html = this.getHtmlForWebView(webviewView.webview);
 
+        // Handle messages from the webview
         webviewView.webview.onDidReceiveMessage(data => {
             switch (data.type) {
                 case "loadDocument":{
@@ -56,10 +63,14 @@ class DebuggerViewProvider{
             }
         });
 
-
         this._view = webviewView;
     }
 
+    /**Add Options to function selector
+     * 
+     * Send function selectors back to the web view after they have been scraped from the file
+     * @param {Object} functionSelectors 
+     */
     addOptionsToFunctionSelector(functionSelectors){
         if (this._view){
             this._view.show?.(true);
@@ -67,19 +78,12 @@ class DebuggerViewProvider{
         }
     }
 
-    addColor() {
-		if (this._vew) {
-			this._view.show?.(true); // `show` is not implemented in 1.49 but is for 1.50 insiders
-			this._view.webview.postMessage({ type: 'addColor' });
-		}
-	}
-
-	clearColors() {
-		if (this._view) {
-			this._view.webview.postMessage({ type: 'clearColors' });
-		}
-	}
-
+    /**Get html for webview
+     * 
+     * Inline create html to be shown in the function debugger webview
+     * @param webview 
+     * @returns 
+     */
     getHtmlForWebView(webview) {
         // local path of main script to run in the webview
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "function", "functions.main.js"));

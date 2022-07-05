@@ -11,9 +11,7 @@
     
     document.querySelector(".load-interface").addEventListener("click", () => {
         console.log("load interface clicked")
-        vscode.postMessage({type: "loadDocument"});
-        
-        // onLoadInterfaceClicked()
+        vscode.postMessage({type: "loadDocument"});        
     });
 
     document.querySelector(".start-debug").addEventListener("click", () => {
@@ -47,18 +45,6 @@
                 addOptionsToFunctionSelector(message.data)
                 break;
             }
-            case 'addColor':
-                {
-                    addColor();
-                    break;
-                }
-            case 'clearColors':
-                {
-                    colors = [];
-                    updateColorList(colors);
-                    break;
-                }
-
         }
     });
 

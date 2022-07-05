@@ -15,8 +15,11 @@ function getNonce() {
 	return text;
 }
 
-
-
+/**Check calldata is hex
+ * 
+ * @param {String} val 
+ * @returns 
+ */
 function checkCalldataIsHex(val){
 	if (!isHex(val)){
 		vscode.window.showErrorMessage(`Could not run debugger.\nProvided calldata value ${val} is not hex, please convert to hex and try again.`);
@@ -25,6 +28,11 @@ function checkCalldataIsHex(val){
 	return true;
 }
 
+/**Check inputs are hex
+ * 
+ * @param {Array<String>} argsArr 
+ * @returns 
+ */
 function checkInputIsHex(argsArr){
 	for (const arg of argsArr){
 		if (!isHex(arg)){

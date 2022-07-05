@@ -1,19 +1,21 @@
 // This script will be run within the webview itself
 // It cannot access the main VS Code APIs directly.
+
+function cleanState(state) {
+    return {
+        macroDefinitions: state.macroDefinitions || [],
+        stackValues: state.stackValues || {},
+        showCalldata: state.showCalldata || false,
+        calldataValue: state.calldataValue || "",
+        runConstructorFirst: state.runConstructorFirst || false,
+        showState: state.showState || false,
+        stateValues: state.stateValues || {}
+    };
+}
+
 (function () {
     const vscode = acquireVsCodeApi();
-
-    const oldState = vscode.getState() || { 
-        macroDefinitions: [],
-        stackValues: {},
-        showCalldata: false,
-        calldataValue: "",
-        runConstructorFirst: false,
-        showState: false,
-        stateValues: {},
-    };
-    
-    // TODO: validate that each of the storage slots are settable
+    const oldState = cleanState(vscode.getState());    
 
     /** @type {Array<{ value: string }>} */
     let macroDefinitions = oldState.macroDefinitions || [];
@@ -31,7 +33,6 @@
     })
 
     const calldataInput = document.getElementById("calldata-input");
-    const calldataChecked = document.getElementById("input[name=calldata-checkbox]:checked");
     const calldataCheckbox = document.getElementById("calldata-checkbox");
     
     if (oldState.showCalldata){
@@ -154,7 +155,6 @@
     function prepareDebugSession(){
         // Get the currently selected function selector
         const ul = document.querySelector(".stack-items");
-        
         const state = vscode.getState();
 
         // Get the current arguments to execute with
@@ -163,8 +163,8 @@
             node => node.childNodes.forEach(
                 input => argsArr.push(input.value)))
 
-        // get state checkbox value
-        const stateChecked = document.querySelector(".state-checkbox").checked;
+        // TODO: reintroduce button - set as false for the meantime
+        const stateChecked = false;
 
         // Allow macro's to be spoofed with calldata
         const calldataChecked = document.querySelector(".calldata-checkbox").checked;
@@ -193,7 +193,6 @@
         switch (message.type) {
             case 'receiveMacros': {
                 addOptionsToMacroSelector(message.data);
-
                 break;
             }
         }
@@ -225,6 +224,11 @@
         functionSelectorDropdown.click();
     }
 
+    /**Create stack inputs
+     * 
+     * Render stack inputs based on selected macro
+     * @param event 
+     */
     function createStackInputs(event){
         selectedMacro = event.target.value;
         const macroIfo = macroDefinitions[selectedMacro];

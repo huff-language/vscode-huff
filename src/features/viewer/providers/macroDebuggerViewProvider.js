@@ -1,8 +1,8 @@
 const vscode = require("vscode");
 
-const {getNonce, checkInputIsHex, checkCalldataIsHex} = require("../providerUtils");
+const {getNonce, checkInputIsHex, checkCalldataIsHex} = require("./utils");
 const {getMacros, getImports} = require("../../regexUtils");
-const {startMacroDebugger} = require("./macroDebugger");
+const {startMacroDebugger} = require("../macroDebugger");
 
 
 /**Macro Debugger View Provider
@@ -58,6 +58,7 @@ class MacroDebuggerViewProvider{
                     // get required file imports to flatten the file
                     const imports = getImports(vscode.window.activeTextEditor?.document.getText())
                     
+                    // TODO: get config from radio buttons
                     startMacroDebugger(
                         vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri).uri.path, 
                         vscode.workspace.asRelativePath(vscode.window.activeTextEditor.document.uri), 
@@ -89,11 +90,11 @@ class MacroDebuggerViewProvider{
     getHtmlForWebView(webview) {
         // local path of main script to run in the webview
 
-        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "macro", "macro.main.js"));
+        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "macro.main.js"));
 
         // Do the same for the stylesheet
-        const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "css", "vscode.css"));
-        const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "css", "main.css"));
+        const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "vscode.css"));
+        const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "main.css"));
 
         // Use nonce to allow only a specific script to be run
         const nonce = getNonce();
@@ -125,6 +126,10 @@ class MacroDebuggerViewProvider{
 
                         <!-- Have a checkbox button to operate with state -->
                         <form>
+                            <input class="state-checkbox" type="checkbox" id="state-checkbox" name="state-checkbox" value="debug-mode">
+                            <label for="state-checkbox">Run Constructor First</label>
+                            
+                            </br>
                             <input class="calldata-checkbox" type="checkbox" id="calldata-checkbox" name="calldata-checkbox">
                             <label for="calldata-checkbox">With Calldata</label>
                             </br>

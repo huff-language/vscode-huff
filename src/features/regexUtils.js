@@ -14,7 +14,12 @@ const createKeccakHash = require('keccak');
     return signatureExtractor(content, publicFuncSigRegex, 8)
 }
 
-// create a function that can perform both of these as one
+/**Event Signature Extractor
+ * 
+ * Get all of the events defined within the current file
+ * @param {String} content 
+ * @returns 
+ */
 function eventSignatureExtractor(content){
     const interfaceFuncSigRegex = /event\s+(?<name>[^\(\s]+)\s?\((?<args>[^\)]*)\)/g;
 
@@ -51,6 +56,12 @@ function signatureExtractor(content, matchPattern, returnLength=64){
     return {sigHashes, collisions}
 }
 
+/**Get Function Signature and args
+ * 
+ * Parse all of the function definitions for the current file
+ * @param {String} content 
+ * @returns 
+ */
 function getFunctionSignaturesAndArgs(content){
     const publicFuncSigRegex = /function\s+(?<name>[^\(\s]+)\s?\((?<args>[^\)]*)\)/g;
     // const publicFuncSigRegex = /function\s+(?<name>[^\(\s]+)\s?\((?<args>[^\)]*)\).*(public|external)?/g;
@@ -70,6 +81,12 @@ function getFunctionSignaturesAndArgs(content){
     return {sighashes, collisions}
 }
 
+/**Get Macros
+ * 
+ * Get all of the macro definitions in the current file
+ * @param {String} content 
+ * @returns {Object}
+ */
 function getMacros(content){
     //takes(?<takes>[^\)]*)\)
     const macroRegex = /#define\s+macro\s+(?<name>[^\(\s]+)\s?\((?<args>[^\)]*)\)\s?=\s?takes\s?\((?<takes>[\d])\)\s?returns\s?\((?<returns>[\d])\)\s?{(?<body>[\s\S]*?(?=}))/gsm;
@@ -84,6 +101,12 @@ function getMacros(content){
     return macros;
 }
 
+/**Get Imports
+ * 
+ * Get all of the include statements in the current file
+ * @param {String} content 
+ * @returns 
+ */
 function getImports(content){
     const importRegex = /#include\s+(?<file>[^\(\s]+)/gm;
 
