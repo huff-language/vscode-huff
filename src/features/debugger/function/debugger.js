@@ -1,4 +1,5 @@
 const fs = require("fs");
+const createKeccakHash = require('keccak');
 
 // TODO: use a slimmer abicoder
 const { AbiCoder } = require("ethers/lib/utils");
@@ -22,7 +23,7 @@ async function startDebugger(cwd, currentFile, imports, functionSelector, argsAr
     const config = {
       ...hevmConfig,  
       hevmContractAddress: createKeccakHash("keccak256")
-        .update(Buffer.from(macro.toString()))
+        .update(Buffer.from(currentFile))
         .digest("hex")
         .toString("hex")
         .slice(0,42)
