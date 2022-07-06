@@ -82,7 +82,6 @@ function checkStateRepoExistence(statePath, cwd) {
     console.log("Creating state repository...")
     
     const fullPath = cwd + "/" + statePath;
-    console.log(fullPath)
     
     // delete old state
     try{ fs.rmSync(fullPath, {recursive:true}) } 

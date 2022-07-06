@@ -143,11 +143,26 @@ function runMacroDebugger(bytecode, runtimeBytecode, config, cwd) {
 function overrideStorage(macro, config) {
   // write a temp file that will set storage slots
   const {stateValues} = config;
+
+  const constructorRegex = /^[^/]#define\s+macro\s+CONSTRUCTOR\s?\((?<args>[^\)]*)\)\s?=\s?takes\s?\((?<takes>[\d])\)\s?returns\s?\((?<returns>[\d])\)\s?{(?<body>[\s\S]*?(?=}))/gsm
+  const constructorMatch = constructorRegex.exec(macro);
   
-  let content = "\n#define macro CONSTRUCTOR() = takes(0) returns(0) {\n";
+  // get string of sstore overrides
+  let overrides = "";
   for (const state of stateValues){
-    content += `${state.value} ${state.key} sstore\n`
+    overrides += `${state.value} ${state.key} sstore\n`
   }
+  
+  // if there is a constructor
+  if (constructorMatch) {
+    // append overrides to the end of the constructor macro
+    return macro.replace(constructorRegex, constructorMatch[0] + "\n\t" + overrides);    
+  }
+  
+  // otherwise create a constructor at the end
+  let content = "";
+  content = "\n#define macro CONSTRUCTOR() = takes(0) returns(0) {\n\t";
+  content += overrides;
   content += "}";
 
   return macro + content;
