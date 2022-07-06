@@ -31,6 +31,12 @@ class MacroDebuggerViewProvider{
             ]
         }
 
+        // Get macros from the file
+        vscode.workspace.onDidSaveTextDocument((e) => {
+            const macros = getMacros(vscode.window.activeTextEditor?.document.getText());
+            this.updateSavedMacros(macros);
+        })
+
         webviewView.webview.html = this.getHtmlForWebView(webviewView.webview);
 
         webviewView.webview.onDidReceiveMessage(data => {
@@ -83,6 +89,13 @@ class MacroDebuggerViewProvider{
         if (this._view){
             this._view.show?.(true);
             this._view.webview.postMessage({ type: "receiveMacros", data: macros })
+        }
+    }
+
+    updateSavedMacros(macros){
+        if (this._view){
+            this._view.show?.(true);
+            this._view.webview.postMessage({ type: "updateMacros", data: macros })
         }
     }
 

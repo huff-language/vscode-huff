@@ -195,6 +195,10 @@ function cleanState(state) {
                 addOptionsToMacroSelector(message.data);
                 break;
             }
+            case 'updateMacros': {
+                updateMacros(message.data);
+                break;
+            }
         }
     });
 
@@ -222,6 +226,15 @@ function cleanState(state) {
 
         // select the first macro
         functionSelectorDropdown.click();
+    }
+
+    /**Update Macro Conditions
+     * 
+     * Update the saved macro conditions so that they track across vscode saves
+     * @param {Object} _macroDefinitions 
+     */
+    function updateMacros(_macroDefinitions) {
+        macroDefinitions = _macroDefinitions;
     }
 
     /**Create stack inputs
