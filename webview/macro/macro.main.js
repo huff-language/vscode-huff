@@ -3,7 +3,8 @@
 
 function cleanState(state) {
     return {
-        macroDefinitions: state.macroDefinitions || [],
+        selectedMacro: state.selectedMacro || "",
+        macroDefinitions: state.macroDefinitions || {},
         stackValues: state.stackValues || {},
         showCalldata: state.showCalldata || false,
         calldataValue: state.calldataValue || "",
@@ -15,15 +16,20 @@ function cleanState(state) {
 
 (function () {
     const vscode = acquireVsCodeApi();
-    const oldState = cleanState(vscode.getState());    
+    const oldState = vscode.getState() ? cleanState(vscode.getState()) : {};
 
     /** @type {Array<{ value: string }>} */
-    let macroDefinitions = oldState.macroDefinitions || [];
-    let selectedMacro = "";
-    
+    let macroDefinitions = oldState.macroDefinitions;
+    let selectedMacro = oldState.selectedMacro;
+
+
+    // load previously stored macros
+    addOptionsToMacroSelector(macroDefinitions, selectedMacro);
 
     document.querySelector(".load-macro")
         .addEventListener("click", () => {
+            // clear the current macro button
+            document.querySelector(".macro-select").innerHTML = "";
             vscode.postMessage({type: "loadMacros"});            
     });
 
@@ -192,7 +198,7 @@ function cleanState(state) {
         const message = event.data; // The json data that the extension sent
         switch (message.type) {
             case 'receiveMacros': {
-                addOptionsToMacroSelector(message.data);
+                addOptionsToMacroSelector(message.data, null);
                 break;
             }
             case 'updateMacros': {
@@ -209,8 +215,11 @@ function cleanState(state) {
      * be a candidate for the debugger
      * 
      * @param {*} macroDefinitions 
+     * @param {String} selectedMacro
      */
-    function addOptionsToMacroSelector(_macroDefinitions){
+    function addOptionsToMacroSelector(_macroDefinitions, selectedMacro){
+        // TODO: make function for this
+        vscode.setState({...vscode.getState(), macroDefinitions: _macroDefinitions});
         macroDefinitions = _macroDefinitions
         var functionSelectorDropdown = document.getElementById("macro-select");
         
@@ -224,6 +233,8 @@ function cleanState(state) {
             functionSelectorDropdown.add(option); 
         }
 
+        if (selectedMacro) functionSelectorDropdown.value = selectedMacro;
+
         // select the first macro
         functionSelectorDropdown.click();
     }
@@ -235,6 +246,7 @@ function cleanState(state) {
      */
     function updateMacros(_macroDefinitions) {
         macroDefinitions = _macroDefinitions;
+        vscode.setState({...vscode.getState(), macroDefinitions: _macroDefinitions});
     }
 
     /**Create stack inputs
@@ -244,6 +256,10 @@ function cleanState(state) {
      */
     function createStackInputs(event){
         selectedMacro = event.target.value;
+        
+        // TODO: make function for this
+        vscode.setState({...vscode.getState(), selectedMacro: selectedMacro});
+
         const macroIfo = macroDefinitions[selectedMacro];
 
         const ul = document.querySelector(".stack-items");

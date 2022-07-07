@@ -1,16 +1,30 @@
 // This script will be run within the webview itself
 // It cannot access the main VS Code APIs directly.
+function cleanState(state) {
+    return {
+        functionSelectors: state.functionSelectors || {},
+        selectedFunction: state.selectedFunction || null,
+        argsValues: {}
+    };
+}
+
 (function () {
     const vscode = acquireVsCodeApi();
-
-    const oldState = vscode.getState() || { functionSelectors: [] };
+    const oldState = vscode.getState() ? cleanState(vscode.getState()) : {};
 
     /** @type {Array<{ value: string }>} */
-    let functionSelectors = oldState.functionSelectors || [];
-    let selectedFunction = [];
+    let functionSelectors = oldState.functionSelectors;
+    let selectedFunction = oldState.selectedFunction;
+
+    // load in saved functionSelectors
+    addOptionsToFunctionSelector(functionSelectors, selectedFunction);
+
+    // load in saved argsValues
+
     
     document.querySelector(".load-interface").addEventListener("click", () => {
         console.log("load interface clicked")
+        document.getElementById("function-select").innerHTML = "";
         vscode.postMessage({type: "loadDocument"});        
     });
 
@@ -42,7 +56,7 @@
         const message = event.data; // The json data that the extension sent
         switch (message.type) {
             case 'receiveContractInterface': {
-                addOptionsToFunctionSelector(message.data)
+                addOptionsToFunctionSelector(message.data, null)
                 break;
             }
         }
@@ -55,8 +69,10 @@
      * 
      * @param {*} functionSelectors 
      */
-    function addOptionsToFunctionSelector(_functionSelectors){
+    function addOptionsToFunctionSelector(_functionSelectors, selectedFunction) {
         functionSelectors = _functionSelectors
+        vscode.setState({...vscode.getState(), functionSelectors});
+
         var functionSelectorDropdown = document.getElementById("function-select");
         
         // listen for changes in the function that is selected
@@ -69,28 +85,46 @@
             functionSelectorDropdown.add(option); 
         }
 
+        if (selectedFunction) functionSelectorDropdown.value = selectedFunction[1].fnSig;
+
         functionSelectorDropdown.click();
     }
 
     function createArgsInputs(event){
+        // empty clicks
+        if (!event.target.value) return
+
         const entries = Object.entries(functionSelectors);
         const funcProperties = entries.filter(([key, value]) => value.fnSig === event.target.value)[0];
 
         // store the whole object
-        selectedFunction = funcProperties
+        selectedFunction = funcProperties;
+        vscode.setState({...vscode.getState(), selectedFunction});
 
         const ul = document.querySelector(".args-inputs");
         ul.textContent = "";
+        
+        let i = 0;
         for (const arg of funcProperties[1].args){
             const li = document.createElement("li");
             
             const input = document.createElement("input")
             input.className = "arg-input";
-            input.value = arg;
+            input.id = ++i;
+            
+            const state = vscode.getState()
+
+            input.value = (state.argsValues[selectedFunction[0]] && state.argsValues[selectedFunction[0]][i] ) ? state.argsValues[selectedFunction[0]][i] : arg;
             input.type = "text";
-            input.addEventListener("change", (e)=> {
-                
+            input.addEventListener("input", (e)=> {
+                const id = e.target.id;
                 input.value = e.target.value;
+
+                // update the state to reflect the new value
+                const state = vscode.getState();
+                state.argsValues[selectedFunction[0]] = state.argsValues[selectedFunction[0]] || {};
+                state.argsValues[selectedFunction[0]][id] = e.target.value;
+                vscode.setState(state);
             })
 
 
