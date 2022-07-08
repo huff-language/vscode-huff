@@ -17,10 +17,10 @@ const {execSync} = require("child_process");
 function deployContract(
     bytecode, 
     config, 
-    cwd, 
-    macro = false
+    cwd
   ) {
     if (config.stateChecked || config.storageChecked){
+        console.log("resetting state")
         checkStateRepoExistence(config.statePath, cwd)
     }
 
@@ -82,7 +82,6 @@ function checkStateRepoExistence(statePath, cwd) {
     console.log("Creating state repository...")
     
     const fullPath = cwd + "/" + statePath;
-    console.log(fullPath)
     
     // delete old state
     try{ fs.rmSync(fullPath, {recursive:true}) } 

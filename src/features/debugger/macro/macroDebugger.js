@@ -82,14 +82,23 @@ function createCompiledMacro(cwd, macro, argsObject, currentFile, imports) {
       .toString()
       .replace(/#define\s?macro\s?MAIN[\s\S]*?{[\s\S]*?}/gsm, "") // remove main
       .replace(/#include\s".*"/gsm, "") // remove include
-  );
+    );
+
+    // replace jump labels
+    let macroBody = macro.body;
+    const jumpLabelRegex = /<.*>/gm; 
+    if (jumpLabelRegex.test(macroBody)) {
+      console.log("jump label found in macro")
+      macroBody = macroBody.replace(jumpLabelRegex, "error");
+      macroBody += "error:\n\t0x0 dup1 stop";
+    }
 
   // //#include "../${currentFile}" - was the top line - do i need it if not compiling from files?
     const compilableMacro = `
 ${files.join("\n")}
 #define macro MAIN() = takes(0) returns (0) {
   ${argsObject.join(" ")}
-  ${macro.body}
+  ${macroBody}
 }`;
 
 
@@ -143,15 +152,31 @@ function runMacroDebugger(bytecode, runtimeBytecode, config, cwd) {
 function overrideStorage(macro, config) {
   // write a temp file that will set storage slots
   const {stateValues} = config;
+
+  const constructorRegex = /^[^/]#define\s+macro\s+CONSTRUCTOR\s?\((?<args>[^\)]*)\)\s?=\s?takes\s?\((?<takes>[\d])\)\s?returns\s?\((?<returns>[\d])\)\s?{(?<body>[\s\S]*?(?=}))/gsm
+  const constructorMatch = constructorRegex.exec(macro);
   
-  let content = "\n#define macro CONSTRUCTOR() = takes(0) returns(0) {\n";
+  // get string of sstore overrides
+  let overrides = "";
   for (const state of stateValues){
-    content += `${state.value} ${state.key} sstore\n`
+    overrides += `${state.value} ${state.key} sstore\n`
   }
+  
+  // if there is a constructor
+  if (constructorMatch) {
+    // append overrides to the end of the constructor macro
+    return macro.replace(constructorRegex, constructorMatch[0] + "\n\t" + overrides);    
+  }
+  
+  // otherwise create a constructor at the end
+  let content = "";
+  content = "\n#define macro CONSTRUCTOR() = takes(0) returns(0) {\n\t";
+  content += overrides;
   content += "}";
 
   return macro + content;
 }
+
 
 module.exports = {
     startMacroDebugger

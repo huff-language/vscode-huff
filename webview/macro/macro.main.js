@@ -1,9 +1,12 @@
 // This script will be run within the webview itself
 // It cannot access the main VS Code APIs directly.
+import { updateState } from "../helpers.js";
 
+// defaults for each state variable
 function cleanState(state) {
     return {
-        macroDefinitions: state.macroDefinitions || [],
+        selectedMacro: state.selectedMacro || "",
+        macroDefinitions: state.macroDefinitions || {},
         stackValues: state.stackValues || {},
         showCalldata: state.showCalldata || false,
         calldataValue: state.calldataValue || "",
@@ -14,23 +17,20 @@ function cleanState(state) {
 }
 
 (function () {
+
+    // --------------- Initialization --------------- //
     const vscode = acquireVsCodeApi();
-    const oldState = cleanState(vscode.getState());    
+    const oldState = cleanState(vscode.getState());
+    updateState(vscode, oldState);
 
     /** @type {Array<{ value: string }>} */
-    let macroDefinitions = oldState.macroDefinitions || [];
-    let selectedMacro = "";
-    
+    let macroDefinitions = oldState.macroDefinitions;
+    let selectedMacro = oldState.selectedMacro;
 
-    document.querySelector(".load-macro")
-        .addEventListener("click", () => {
-            vscode.postMessage({type: "loadMacros"});            
-    });
 
-    document.querySelector(".start-debug")
-        .addEventListener("click", () => {
-            prepareDebugSession();
-    })
+    // ----------------- Load previous state ----------------- //
+    // load previously stored macros
+    addOptionsToMacroSelector(macroDefinitions, selectedMacro);
 
     const calldataInput = document.getElementById("calldata-input");
     const calldataCheckbox = document.getElementById("calldata-checkbox");
@@ -48,7 +48,7 @@ function cleanState(state) {
             ? calldataInput.style.display = "block"
             : calldataInput.style.display = "none"
         
-        vscode.setState({...vscode.getState() ,showCalldata: e.target.checked});
+        updateState(vscode, {showCalldata: e.target.checked});
     })
 
     // Set calldatavalue to saved value
@@ -68,6 +68,25 @@ function cleanState(state) {
         addSlotButton.style.display = "none";
     }
 
+    // Set storage overrides to saved values
+    Object.keys(oldState.stateValues).map(id => {
+        const {key, value} = oldState.stateValues[id];
+        renderStateSetter(id, key, value);
+    })
+
+    // ----------------- Event Handlers ----------------- //
+    document.querySelector(".load-macro")
+        .addEventListener("click", () => {
+            // clear the current macro button
+            document.getElementById("macro-select").innerHTML = "";
+            vscode.postMessage({type: "loadMacros"});            
+    });
+
+    document.querySelector(".start-debug")
+        .addEventListener("click", () => {
+            prepareDebugSession();
+    })
+
     stateCheckbox.addEventListener("click", (e) => {
         if (e.target.checked) {
             storageList.style.display = "block"  ;
@@ -77,13 +96,7 @@ function cleanState(state) {
             addSlotButton.style.display = "none";
         }
 
-        vscode.setState({...vscode.getState() ,showState: e.target.checked});
-    })
-
-    // Set storage overrides to saved values
-    Object.keys(oldState.stateValues).map(id => {
-        const {key, value} = oldState.stateValues[id];
-        renderStateSetter(id, key, value);
+        updateState(vscode, {showState: e.target.checked});
     })
 
     // Whenever the user clicks the add state button
@@ -93,6 +106,28 @@ function cleanState(state) {
         renderStateSetter(id, false, false)
     });
 
+    calldataInput.addEventListener("keypress", handleKeyPress);
+    calldataInput.addEventListener("change", handleKeyPress);
+
+
+    // ----------------- Message Handlers ----------------- //
+    // Handle messages sent from the extension to the webview
+    window.addEventListener('message', event => {
+        const message = event.data; // The json data that the extension sent
+        switch (message.type) {
+            case 'receiveMacros': {
+                addOptionsToMacroSelector(message.data, null);
+                break;
+            }
+            case 'updateMacros': {
+                updateMacros(message.data);
+                break;
+            }
+        }
+    });
+
+
+    // ----------------- Rendering ----------------- //
     // Render a state setter widget
     function renderStateSetter(id, key, value){
         const newSlot = document.createElement("div");
@@ -143,15 +178,6 @@ function cleanState(state) {
 
     }
 
-
-    // Handle entering calldata
-    function handleKeyPress(e){
-        vscode.setState({...vscode.getState(), calldataValue: e.target.value});
-    }
-    calldataInput.addEventListener("keypress", handleKeyPress);
-    calldataInput.addEventListener("change", handleKeyPress);
-
-
     function prepareDebugSession(){
         // Get the currently selected function selector
         const ul = document.querySelector(".stack-items");
@@ -187,16 +213,6 @@ function cleanState(state) {
     }
 
 
-    // Handle messages sent from the extension to the webview
-    window.addEventListener('message', event => {
-        const message = event.data; // The json data that the extension sent
-        switch (message.type) {
-            case 'receiveMacros': {
-                addOptionsToMacroSelector(message.data);
-                break;
-            }
-        }
-    });
 
 
     /**Add Options to function selector
@@ -205,8 +221,11 @@ function cleanState(state) {
      * be a candidate for the debugger
      * 
      * @param {*} macroDefinitions 
+     * @param {String} selectedMacro
      */
-    function addOptionsToMacroSelector(_macroDefinitions){
+    function addOptionsToMacroSelector(_macroDefinitions, selectedMacro){
+        // TODO: make function for this
+        updateState(vscode, {macroDefinitions: _macroDefinitions});
         macroDefinitions = _macroDefinitions
         var functionSelectorDropdown = document.getElementById("macro-select");
         
@@ -220,8 +239,20 @@ function cleanState(state) {
             functionSelectorDropdown.add(option); 
         }
 
+        if (selectedMacro) functionSelectorDropdown.value = selectedMacro;
+
         // select the first macro
         functionSelectorDropdown.click();
+    }
+
+    /**Update Macro Conditions
+     * 
+     * Update the saved macro conditions so that they track across vscode saves
+     * @param {Object} _macroDefinitions 
+     */
+    function updateMacros(_macroDefinitions) {
+        macroDefinitions = _macroDefinitions;
+        updateState(vscode, { macroDefinitions: _macroDefinitions});
     }
 
     /**Create stack inputs
@@ -231,22 +262,43 @@ function cleanState(state) {
      */
     function createStackInputs(event){
         selectedMacro = event.target.value;
+        
+        // TODO: make function for this
+        updateState(vscode, {selectedMacro: selectedMacro});
+
         const macroIfo = macroDefinitions[selectedMacro];
+        if (!macroIfo) return; // return if initializing a new file
 
         const ul = document.querySelector(".stack-items");
         ul.textContent = "";
         for (let i=1; i <= macroIfo.takes; i++){
             const li = document.createElement("li");
-            
+
             const input = document.createElement("input")
             input.className = "arg-input";
-            input.value = i;
             input.type = "text";
+            input.id = i;
+
+            // give saved value or default
+            const state = vscode.getState();
+            input.value = (
+                state.stackValues[selectedMacro] 
+                && state.stackValues[selectedMacro][i]
+            ) ?
+                state.stackValues[selectedMacro][i]
+                : i;
+
 
             // allow for user input to the stack items
-            input.addEventListener("change", (e)=> {
-                
+            input.addEventListener("input", (e)=> {
+                const id = e.target.id;
                 input.value = e.target.value;
+
+                // Update the state to reflect the change
+                const state = vscode.getState();
+                state.stackValues[selectedMacro] = state.stackValues[selectedMacro] || {};
+                state.stackValues[selectedMacro][id] = e.target.value;
+                vscode.setState(state);
             })
 
 
@@ -256,6 +308,13 @@ function cleanState(state) {
             // Add list item to the list
             ul.appendChild(li);
         }
+    }
+
+
+    // --------------- helper functions --------------- //
+    // Handle entering calldata
+    function handleKeyPress(e){
+        updateState(vscode, { calldataValue: e.target.value});
     }
 
 }());
