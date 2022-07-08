@@ -26,7 +26,8 @@ async function startDebugger(cwd, currentFile, imports, functionSelector, argsAr
         .update(Buffer.from(currentFile))
         .digest("hex")
         .toString("hex")
-        .slice(0,42)
+        .slice(0,42),
+      stateChecked: true
     }
     
     // Get calldata
@@ -37,12 +38,9 @@ async function startDebugger(cwd, currentFile, imports, functionSelector, argsAr
 
     // Compile binary using locally installed compiler - in the future this will be replaced with a wasm compiler
     const bytecode = compileFromFile(compilableFile, config.tempMacroFilename, cwd);
-    
+
     // Get runtime bytecode and run constructor logic
     const runtimeBytecode = deployContract(bytecode, config, cwd);
-    
-    // Reset hevm state
-    resetStateRepo(config.statePath, cwd)
   
     runDebugger(runtimeBytecode, calldata,  options, config, cwd)
   }
@@ -92,7 +90,7 @@ function runDebugger(bytecode, calldata, flags, config, cwd) {
   --address ${config.hevmContractAddress} \
   --caller ${config.hevmCaller} \
   --gas 0xffffffff \
-  ${(flags.state) ? ("--state "+ cwd + "/" + config.statePath)  : ""} \
+  --state ${cwd + "/" + config.statePath} \
   --debug \
   ${calldata ? "--calldata " + calldata : ""}`
   

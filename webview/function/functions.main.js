@@ -1,5 +1,7 @@
 // This script will be run within the webview itself
 // It cannot access the main VS Code APIs directly.
+import { updateState } from "../helpers.js";
+
 function cleanState(state) {
     return {
         functionSelectors: state.functionSelectors || {},
@@ -71,7 +73,7 @@ function cleanState(state) {
      */
     function addOptionsToFunctionSelector(_functionSelectors, selectedFunction) {
         functionSelectors = _functionSelectors
-        vscode.setState({...vscode.getState(), functionSelectors});
+        updateState(vscode,{functionSelectors});
 
         var functionSelectorDropdown = document.getElementById("function-select");
         
@@ -99,7 +101,7 @@ function cleanState(state) {
 
         // store the whole object
         selectedFunction = funcProperties;
-        vscode.setState({...vscode.getState(), selectedFunction});
+        updateState(vscode,{selectedFunction});
 
         const ul = document.querySelector(".args-inputs");
         ul.textContent = "";
@@ -124,7 +126,7 @@ function cleanState(state) {
                 const state = vscode.getState();
                 state.argsValues[selectedFunction[0]] = state.argsValues[selectedFunction[0]] || {};
                 state.argsValues[selectedFunction[0]][id] = e.target.value;
-                vscode.setState(state);
+                updateState(vscode,state);
             })
 
 

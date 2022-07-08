@@ -17,10 +17,10 @@ const {execSync} = require("child_process");
 function deployContract(
     bytecode, 
     config, 
-    cwd, 
-    macro = false
+    cwd
   ) {
     if (config.stateChecked || config.storageChecked){
+        console.log("resetting state")
         checkStateRepoExistence(config.statePath, cwd)
     }
 

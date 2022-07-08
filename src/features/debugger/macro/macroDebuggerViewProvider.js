@@ -103,6 +103,7 @@ class MacroDebuggerViewProvider{
         // local path of main script to run in the webview
 
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "macro", "macro.main.js"));
+        const helpersUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "helpers.js"));
 
         // Do the same for the stylesheet
         const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionURI, "webview", "css", "vscode.css"));
@@ -156,7 +157,8 @@ class MacroDebuggerViewProvider{
                         <button id="add-slot">Add slot</button>
 
                         <button class="start-debug">Start Debug</button>
-                        <script nonce="${nonce}" src="${scriptUri}"></script>
+                        <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
+                        <script type="module" nonce="${nonce}" src="${helpersUri}"></script>
                      </body>
                 </html>`;
         
