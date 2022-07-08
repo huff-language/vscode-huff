@@ -82,14 +82,23 @@ function createCompiledMacro(cwd, macro, argsObject, currentFile, imports) {
       .toString()
       .replace(/#define\s?macro\s?MAIN[\s\S]*?{[\s\S]*?}/gsm, "") // remove main
       .replace(/#include\s".*"/gsm, "") // remove include
-  );
+    );
+
+    // replace jump labels
+    let macroBody = macro.body;
+    const jumpLabelRegex = /<.*>/gm; 
+    if (jumpLabelRegex.test(macroBody)) {
+      console.log("jump label found in macro")
+      macroBody = macroBody.replace(jumpLabelRegex, "error");
+      macroBody += "error:\n\t0x0 dup1 stop";
+    }
 
   // //#include "../${currentFile}" - was the top line - do i need it if not compiling from files?
     const compilableMacro = `
 ${files.join("\n")}
 #define macro MAIN() = takes(0) returns (0) {
   ${argsObject.join(" ")}
-  ${macro.body}
+  ${macroBody}
 }`;
 
 
@@ -167,6 +176,7 @@ function overrideStorage(macro, config) {
 
   return macro + content;
 }
+
 
 module.exports = {
     startMacroDebugger

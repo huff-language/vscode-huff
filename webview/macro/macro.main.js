@@ -20,7 +20,8 @@ function cleanState(state) {
 
     // --------------- Initialization --------------- //
     const vscode = acquireVsCodeApi();
-    const oldState = vscode.getState() ? cleanState(vscode.getState()) : {};
+    const oldState = cleanState(vscode.getState());
+    updateState(vscode, oldState);
 
     /** @type {Array<{ value: string }>} */
     let macroDefinitions = oldState.macroDefinitions;
@@ -77,7 +78,7 @@ function cleanState(state) {
     document.querySelector(".load-macro")
         .addEventListener("click", () => {
             // clear the current macro button
-            document.querySelector(".macro-select").innerHTML = "";
+            document.getElementById("macro-select").innerHTML = "";
             vscode.postMessage({type: "loadMacros"});            
     });
 
@@ -266,21 +267,38 @@ function cleanState(state) {
         updateState(vscode, {selectedMacro: selectedMacro});
 
         const macroIfo = macroDefinitions[selectedMacro];
+        if (!macroIfo) return; // return if initializing a new file
 
         const ul = document.querySelector(".stack-items");
         ul.textContent = "";
         for (let i=1; i <= macroIfo.takes; i++){
             const li = document.createElement("li");
-            
+
             const input = document.createElement("input")
             input.className = "arg-input";
-            input.value = i;
             input.type = "text";
+            input.id = i;
+
+            // give saved value or default
+            const state = vscode.getState();
+            input.value = (
+                state.stackValues[selectedMacro] 
+                && state.stackValues[selectedMacro][i]
+            ) ?
+                state.stackValues[selectedMacro][i]
+                : i;
+
 
             // allow for user input to the stack items
-            input.addEventListener("change", (e)=> {
-                
+            input.addEventListener("input", (e)=> {
+                const id = e.target.id;
                 input.value = e.target.value;
+
+                // Update the state to reflect the change
+                const state = vscode.getState();
+                state.stackValues[selectedMacro] = state.stackValues[selectedMacro] || {};
+                state.stackValues[selectedMacro][id] = e.target.value;
+                vscode.setState(state);
             })
 
 

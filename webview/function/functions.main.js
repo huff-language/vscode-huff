@@ -6,13 +6,16 @@ function cleanState(state) {
     return {
         functionSelectors: state.functionSelectors || {},
         selectedFunction: state.selectedFunction || null,
-        argsValues: {}
+        argsValues: state.argsValues || {}
     };
 }
 
 (function () {
     const vscode = acquireVsCodeApi();
-    const oldState = vscode.getState() ? cleanState(vscode.getState()) : {};
+    const oldState = cleanState(vscode.getState());
+    
+    // load in clean
+    updateState(vscode, oldState);
 
     /** @type {Array<{ value: string }>} */
     let functionSelectors = oldState.functionSelectors;
@@ -101,7 +104,7 @@ function cleanState(state) {
 
         // store the whole object
         selectedFunction = funcProperties;
-        updateState(vscode,{selectedFunction});
+        updateState(vscode, {selectedFunction});
 
         const ul = document.querySelector(".args-inputs");
         ul.textContent = "";
@@ -115,8 +118,14 @@ function cleanState(state) {
             input.id = ++i;
             
             const state = vscode.getState()
-
-            input.value = (state.argsValues[selectedFunction[0]] && state.argsValues[selectedFunction[0]][i] ) ? state.argsValues[selectedFunction[0]][i] : arg;
+            input.value = (
+                state.argsValues
+                && state.argsValues[selectedFunction[0]] 
+                && state.argsValues[selectedFunction[0]][i] 
+            ) ? 
+                state.argsValues[selectedFunction[0]][i] 
+                : arg;
+            
             input.type = "text";
             input.addEventListener("input", (e)=> {
                 const id = e.target.id;
@@ -126,7 +135,7 @@ function cleanState(state) {
                 const state = vscode.getState();
                 state.argsValues[selectedFunction[0]] = state.argsValues[selectedFunction[0]] || {};
                 state.argsValues[selectedFunction[0]][id] = e.target.value;
-                updateState(vscode,state);
+                vscode.setState(state);
             })
 
 
