@@ -118,11 +118,7 @@ function runMacroDebugger(bytecode, runtimeBytecode, config, cwd) {
     storageChecked
   } = config;  
   
-  // If state is provided, we need to deploy the contract and persist constructor storage
-  if (stateChecked) {
-    deployContract(bytecode, config, cwd);
-  }
-
+  
   const hevmCommand = `hevm exec \
     --code ${runtimeBytecode.toString()} \
     --address ${hevmContractAddress} \
@@ -153,9 +149,9 @@ function overrideStorage(macro, config) {
   // write a temp file that will set storage slots
   const {stateValues} = config;
 
-  const constructorRegex = /^[^/]#define\s+macro\s+CONSTRUCTOR\s?\((?<args>[^\)]*)\)\s?=\s?takes\s?\((?<takes>[\d])\)\s?returns\s?\((?<returns>[\d])\)\s?{(?<body>[\s\S]*?(?=}))/gsm
+  const constructorRegex = /#define\s+macro\s+CONSTRUCTOR\s?\((?<args>[^\)]*)\)\s?=\s?takes\s?\((?<takes>[\d])\)\s?returns\s?\((?<returns>[\d])\)\s?{(?<body>[\s\S]*?(?=}))/gsm
   const constructorMatch = constructorRegex.exec(macro);
-  
+
   // get string of sstore overrides
   let overrides = "";
   for (const state of stateValues){

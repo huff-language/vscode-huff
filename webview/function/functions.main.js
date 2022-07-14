@@ -3,6 +3,7 @@
 import { updateState } from "../helpers.js";
 
 function cleanState(state) {
+    if (!state) state = {}
     return {
         functionSelectors: state.functionSelectors || {},
         selectedFunction: state.selectedFunction || null,

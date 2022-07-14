@@ -3,6 +3,7 @@ const vscode = require("vscode");
 const {getNonce, checkInputIsHex, checkCalldataIsHex} = require("../providerUtils");
 const {getMacros, getImports} = require("../../regexUtils");
 const {startMacroDebugger} = require("./macroDebugger");
+const { LANGUAGE_ID} = require("../../../settings");
 
 
 /**Macro Debugger View Provider
@@ -15,14 +16,24 @@ class MacroDebuggerViewProvider{
 
     constructor(extensionUri){
         this._extensionURI = extensionUri;   
-        this._view = null;     
+        this._view = null;
+        this._macros = null;
+        this._currentFile = null; 
     }
 
+    /**
+     * 
+     * @param {*} webviewView 
+     * @param {} context 
+     * @param {*} _token 
+     */
     resolveWebviewView(
         webviewView,
         context,
         _token
     ){
+        // get the last active file
+        if (!this._currentFile) this._currentFile = context.state.currentFile || null;
 
         webviewView.webview.options = {
             enableScripts: true,
@@ -32,9 +43,15 @@ class MacroDebuggerViewProvider{
         }
 
         // Get macros from the file
-        vscode.workspace.onDidSaveTextDocument((e) => {
-            const macros = getMacros(vscode.window.activeTextEditor?.document.getText());
-            this.updateSavedMacros(macros);
+        vscode.workspace.onDidSaveTextDocument((document) => {
+            // check the file type and only run on the current file
+            if (
+                document.languageId === LANGUAGE_ID 
+                && document.uri.scheme === "file" 
+                && document.uri.path === this._currentFile 
+            ) {
+                this._macros = getMacros(vscode.window.activeTextEditor?.document.getText());
+            }
         })
 
         webviewView.webview.html = this.getHtmlForWebView(webviewView.webview);
@@ -43,7 +60,10 @@ class MacroDebuggerViewProvider{
             switch (data.type) {
                 case "loadMacros":{
                     const macros = getMacros(vscode.window.activeTextEditor?.document.getText());
-                    this.addMacrosToOptions(macros);
+                    const activeFile = vscode.window.activeTextEditor?.document.uri.path;
+                    this._currentFile = activeFile;
+                    this._macros = macros;
+                    this.addMacrosToOptions(macros, activeFile);
                     break;
                 }
                 case "start-macro-debug": {
@@ -56,6 +76,11 @@ class MacroDebuggerViewProvider{
                         storageChecked,
                         stateValues
                     } = data.values;
+
+                    console.log(macro)
+                    
+                    // Get the full macro body
+                    const macroBody = this._macros[macro];
                     
                     // Prevent debugging and show an error message if the stack inputs are not hex
                     if (!checkInputIsHex(argsArr)) break;
@@ -68,7 +93,7 @@ class MacroDebuggerViewProvider{
                         vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri).uri.path, 
                         vscode.workspace.asRelativePath(vscode.window.activeTextEditor.document.uri), 
                         imports, 
-                        macro, 
+                        macroBody, 
                         argsArr, 
                         {
                             stateChecked,
@@ -85,10 +110,10 @@ class MacroDebuggerViewProvider{
         this._view = webviewView;
     }
 
-    addMacrosToOptions(macros){
+    addMacrosToOptions(macros, currentFile){
         if (this._view){
             this._view.show?.(true);
-            this._view.webview.postMessage({ type: "receiveMacros", data: macros })
+            this._view.webview.postMessage({ type: "receiveMacros", data: macros, currentFile })
         }
     }
 

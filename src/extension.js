@@ -13,7 +13,7 @@ const { DebuggerViewProvider } = require("./features/debugger/function/functionD
  * 
  * Initialise extension commands
  * 
- * @param {*} context Vscode context 
+ * @param {vscode.ExtensionContext} context Vscode context 
  */
 function activate(context){
     const active =  vscode.window.activeTextEditor;
