@@ -2,7 +2,7 @@ const fs = require("fs");
 const createKeccakHash = require('keccak');
 
 // TODO: use a slimmer abicoder
-const { AbiCoder } = require("ethers/lib/utils");
+const { AbiCoder } = require("@ethersproject/abi");
 const { hevmConfig } = require("../../../options");
 const { deployContract, runInUserTerminal, writeHevmCommand, resetStateRepo, registerError, compileFromFile, checkInstallations, purgeCache } = require("../debuggerUtils");
 

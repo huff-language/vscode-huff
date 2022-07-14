@@ -93,8 +93,12 @@ function checkStateRepoExistence(statePath, cwd) {
     fs.mkdirSync(fullPath);
 
     
-    const initStateRepositoryCommand = `git init && git commit --allow-empty -m "init"`;
+    const initStateRepositoryCommand = `git init`;
+    const setHuffAsCommitter = `git config user.name "huff" && git config user.email "huff"`;
+    const initCommit = `git commit --allow-empty -m "init"`;
     execSync(initStateRepositoryCommand, {cwd: fullPath})
+    execSync(setHuffAsCommitter, {cwd: fullPath})
+    execSync(initCommit, {cwd: fullPath})
     console.log("Created state repository...")
   }
   

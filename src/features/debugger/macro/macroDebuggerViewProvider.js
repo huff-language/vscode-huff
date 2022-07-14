@@ -33,7 +33,8 @@ class MacroDebuggerViewProvider{
         _token
     ){
         // get the last active file
-        if (!this._currentFile) this._currentFile = context.state.currentFile || null;
+        if (!this._currentFile && context && context.state) this._currentFile = context.state.currentFile || null;
+        if (!this._macros && context && context.state) this._macros = context.state.macros || null;
 
         webviewView.webview.options = {
             enableScripts: true,
@@ -77,9 +78,8 @@ class MacroDebuggerViewProvider{
                         stateValues
                     } = data.values;
 
-                    console.log(macro)
-                    
-                    // Get the full macro body
+                    // If no macros are found then reload
+                    if (!this._macros) this._macros = getMacros(vscode.window.activeTextEditor?.document.getText());
                     const macroBody = this._macros[macro];
                     
                     // Prevent debugging and show an error message if the stack inputs are not hex
