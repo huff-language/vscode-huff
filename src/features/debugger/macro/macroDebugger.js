@@ -93,7 +93,6 @@ function createCompiledMacro(cwd, macro, argsObject, currentFile, imports) {
       macroBody += "error:\n\t0x0 dup1 stop";
     }
 
-  // //#include "../${currentFile}" - was the top line - do i need it if not compiling from files?
     const compilableMacro = `
 ${files.join("\n")}
 #define macro MAIN() = takes(0) returns (0) {

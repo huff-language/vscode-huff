@@ -41,7 +41,9 @@
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild-base": "esbuild ./src/extension.js --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
     "esbuild": "npm run esbuild-base -- --sourcemap",
-    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch"
+    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
+    "publish:prerelease": "vsce publish --pre-release",
+    "publish:release": "vsce publish"
   },
   "main": "./src/extension.js",
   "extensionKind": [
