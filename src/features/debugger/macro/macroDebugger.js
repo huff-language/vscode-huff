@@ -97,7 +97,7 @@ function createCompiledMacro(cwd, macro, argsObject, currentFile, imports) {
     const compilableMacro = `
 ${files.join("\n")}
 #define macro MAIN() = takes(0) returns (0) {
-  ${argsObject.join(" ")}
+  ${argsObject.reverse().join(" ")}
   ${macroBody}
 }`;
 

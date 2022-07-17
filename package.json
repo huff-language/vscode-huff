@@ -1,6 +1,6 @@
 {
   "name": "huff-language",
-  "version": "0.0.15",
+  "version": "0.0.17",
   "displayName": "huff",
   "description": "VSCode syntax highlighting for huff programming language.",
   "keywords": [
