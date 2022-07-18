@@ -131,9 +131,29 @@ function compile(sourceDirectory, fileName) {
  */
 function compileFromFile(source, filename, cwd) {
     writeHevmCommand(source, filename, cwd);
-    const command = `huffc ${filename} --bytecode`
-    const bytecode = execSync(command, {cwd: cwd});
     
+    const command = `huffc ${filename} --bytecode`
+    let bytecode;
+
+    // if huffc is not found, then try add huffup to path
+    try {
+        bytecode = execSync(command, {cwd: cwd });
+    } catch (e) {
+        try {
+            bytecode = execSync(command, {
+                cwd: cwd, 
+                env: {...process.env, PATH: `${process.env.PATH}:${process.env.HOME}/.huff/bin`}
+            });
+        } catch (e) {
+            console.log("huffc not found");
+            registerError(
+                e,
+                "Huffc was not found in the system path, add it to $PATH or install here: https://github.com/huff-language/huff-rs"
+            )       
+            return false;
+        }
+    }
+
     // remove temp file
     fs.rmSync(`${cwd}/${filename}`); 
     return `0x${bytecode.toString()}`;
