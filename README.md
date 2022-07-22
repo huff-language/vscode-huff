@@ -1,6 +1,6 @@
 # VSCode Huff
 
-**NOTE: Requires path installations of [huffc](https://github.com/huff-language/huff-rs) and [hevm](https://github.com/dapphub/dapptools/tree/master/src/hevm) from [dapptools](https://github.com/dapphub/dapptools) before use.**
+**NOTE: Debugger requires path installations of [huffc](https://github.com/huff-language/huff-rs) and [hevm](https://github.com/dapphub/dapptools/tree/master/src/hevm) from [dapptools](https://github.com/dapphub/dapptools) before use.**
 
 Features at a glances: 
 - Advanced language support
