@@ -1,7 +1,9 @@
 {
   "name": "huff-language",
-  "version": "0.0.18",
-  "displayName": "huff",
+  "version": "0.0.21",
+  "displayName": "Huff",
+  "preview": true,
+  "icon": "resources/huff.png",
   "description": "VSCode syntax highlighting for huff programming language.",
   "keywords": [
     "ethereum",
@@ -43,7 +45,7 @@
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch"
   },
-  "main": "./src/extension.js",
+  "main": "./out/main.js",
   "extensionKind": [
     "ui",
     "workspace"
