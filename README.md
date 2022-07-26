@@ -22,15 +22,23 @@ The example above is for an erc721 mint function, entering from the function deb
 ### Macro Debugging
 Macro debugging is the tool's most useful feature. Clicking `Load Macros` will load the macros of the currently open file.
 If the macro has no `takes` arguments then the window will look like this:
+
+
 ![function debugging window](./resources/macro_window.png)
+
+
 You can choose to add arbitrary hex `calldata` to the debugger instance by selecting the `With Calldata` checkbox. 
 
 #### Defining `takes` parameters:
 ![function debugging window](./resources/macro_with_takes_params.png)
+
+
 If the selected macro has `takes(n)` then n windows will appear to allow setting of the stack before execution.
 
 #### Overriding storage:
 ![function debugging window](./resources/storage_overrides.png)
+
+
 `Storage Overrides` allows you to test your macro with arbitrary overrides for specified storage slots! To use, select the `Storage Overrides` checkbox, then add as many slots as you require. Upon execution, the slots will be set to the values that you have defined. You can quickly toggle this feature off by unselecting the `Storage Overrides` checkbox.
 
 ## Code Generation
