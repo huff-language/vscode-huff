@@ -1,7 +1,7 @@
 const vscode = require("vscode");
 const commandExists = require("command-exists");
 const fs = require("fs");
-const {execSync} = require("child_process");
+const {execSync, exec} = require("child_process");
 
 
 /**Deploy Contract
@@ -24,19 +24,27 @@ function deployContract(
         checkStateRepoExistence(config.statePath, cwd)
     }
 
-    const command = `hevm exec
-    --code ${bytecode} \
-    --address ${config.hevmContractAddress} \
-    --create \
-    --caller ${config.hevmCaller} \
-    --gas 0xffffffff \
-    ${(config.stateChecked || config.storageChecked)  ? "--state " + cwd + "/" + config.statePath : ""}
-    `
+    const command = `hevm exec --code ${bytecode} --address ${config.hevmContractAddress} --create --caller ${config.hevmCaller} --gas 0xffffffff ${(config.stateChecked || config.storageChecked)  ? "--state " + cwd + "/" + config.statePath : ""}`
+    console.log(command)
+
     // cache command
     writeHevmCommand(command, config.tempHevmCommandFilename, cwd);
     
     // execute command
-    return execSync("`cat " + cwd + "/" + config.tempHevmCommandFilename + "`");
+    // const result = execSync("`cat " + cwd + "/" + config.tempHevmCommandFilename + "`", {cwd: cwd});
+    try{
+        const result =  execSync(command)
+        console.log(result)
+        return result
+    }catch (e) {
+        console.log("deployment failure")
+        console.log(e.message)
+        console.log("e.stdout", e.stdout.toString());
+        console.log("e.stderr", e.stderr.toString());
+        console.log("e.pid", e.pid);
+        console.log("e.signal", e.signal);
+        console.log("e.status", e.status);
+    }
 }
 
 

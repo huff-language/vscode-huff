@@ -1,5 +1,6 @@
 const fs = require("fs");
 const createKeccakHash = require('keccak');
+const path = require("path");
 
 // TODO: use a slimmer abicoder
 const { AbiCoder } = require("@ethersproject/abi");
@@ -58,14 +59,22 @@ async function startDebugger(cwd, currentFile, imports, functionSelector, argsAr
  * @returns 
  */
 function flattenFile(cwd, currentFile, imports){
+  // Get relative path of files
   const dirPath = currentFile.split("/").slice(0,-1).join("/")
-  const paths = imports.map(importPath => `${cwd}/${dirPath}${importPath.replace(/#include\s?"./, "").replace('"', "")}`);
+  
+  // Get absolute paths
+  const paths = imports.map(importPath => path.join(`${cwd}/${dirPath}`,importPath.replace(/#include\s?"/, "").replace('"', "")));
   paths.push(cwd+ "/" + currentFile);
-  const files = paths.map(path => fs.readFileSync(path)
+  
+  // Read file contents
+  const files = paths.map(path => {    
+    console.log(path)
+    return fs.readFileSync(path)
       .toString()
+  }
   );
 
-  // remove include
+  // Flatten and remove imports
   return `${files.join("\n")}`.replace(/#include\s".*"/gsm, "");
 }
 
