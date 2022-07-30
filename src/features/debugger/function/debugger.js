@@ -1,25 +1,29 @@
 const fs = require("fs");
 const createKeccakHash = require('keccak');
 const path = require("path");
+const vscode = require("vscode");
 
 // TODO: use a slimmer abicoder
 const { AbiCoder } = require("@ethersproject/abi");
 const { hevmConfig } = require("../../../options");
-const { deployContract, runInUserTerminal, writeHevmCommand, resetStateRepo, registerError, compileFromFile, checkInstallations, purgeCache } = require("../debuggerUtils");
+const { deployContract, runInUserTerminal, writeHevmCommand, resetStateRepo, registerError, compileFromFile, checkInstallations, purgeCache, craftTerminalCommand } = require("../debuggerUtils");
 
 
 /**Start function debugger 
  * 
- * @param {String} cwd The current working directory of selected files workspace
+ * @param {String} sourceDirectory The current working directory of selected files workspace
  * @param {String} currentFile The path to the currently selected file
  * @param {String} functionSelector The 4byte function selector of the transaction being debugged
  * @param {Array<Array<String>>} argsArray Each arg is provided in the format [type, value] so that they can easily be parsed with abi encoder
  * @param {Object} options Options - not explicitly defined 
  */
-async function startDebugger(cwd, currentFile, imports, functionSelector, argsArray, options={state:true}){
+async function startDebugger(sourceDirectory, currentFile, imports, functionSelector, argsArray, options={state:true}){
   try {
     if (!(await checkInstallations())) return;
 
+    // Remove /c: for wsl mounts / windows
+    const cwd = sourceDirectory.replace("/c:","").replace("/mnt/c", "")
+    
     // Create deterministic deployment address for each contract for the deployed contract
     const config = {
       ...hevmConfig,  
@@ -91,7 +95,7 @@ function flattenFile(cwd, currentFile, imports){
  */
 function runDebugger(bytecode, calldata, flags, config, cwd) {
   console.log("Entering debugger...")
-  
+  const isWsl = vscode.env.remoteName === "wsl";
 
   // Hevm Command
   const hevmCommand = `hevm exec \
@@ -99,13 +103,14 @@ function runDebugger(bytecode, calldata, flags, config, cwd) {
   --address ${config.hevmContractAddress} \
   --caller ${config.hevmCaller} \
   --gas 0xffffffff \
-  --state ${cwd + "/" + config.statePath} \
+  --state ${((isWsl) ? "/mnt/c" : "") + cwd + "/" + config.statePath} \
   --debug \
   ${calldata ? "--calldata " + calldata : ""}`
   
+  console.log(hevmCommand)
   // command is cached into a file as execSync has a limit on the command size that it can execute
   writeHevmCommand(hevmCommand, config.tempHevmCommandFilename, cwd);  
-  const terminalCommand = "`cat " + cwd + "/" + config.tempHevmCommandFilename +  "`"
+  const terminalCommand = craftTerminalCommand(cwd, config.tempHevmCommandFilename) 
   runInUserTerminal(terminalCommand);
 }
 

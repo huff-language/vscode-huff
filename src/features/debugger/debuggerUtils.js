@@ -1,7 +1,7 @@
 const vscode = require("vscode");
 const commandExists = require("command-exists");
 const fs = require("fs");
-const {execSync, exec} = require("child_process");
+const {execSync, spawnSync} = require("child_process");
 
 
 /**Deploy Contract
@@ -24,7 +24,9 @@ function deployContract(
         checkStateRepoExistence(config.statePath, cwd)
     }
 
-    const command = `hevm exec --code ${bytecode} --address ${config.hevmContractAddress} --create --caller ${config.hevmCaller} --gas 0xffffffff ${(config.stateChecked || config.storageChecked)  ? "--state " + cwd + "/" + config.statePath : ""}`
+    const isWsl = vscode.env.remoteName === "wsl";
+    const statePath = `${(isWsl) ? "/mnt/c" : ""}${cwd}/${config.statePath}`
+    const command = `hevm exec --code ${bytecode} --address ${config.hevmContractAddress} --create --caller ${config.hevmCaller} --gas 0xffffffff ${(config.stateChecked || config.storageChecked)  ? "--state " + statePath : ""}`
     console.log(command)
 
     // cache command
@@ -32,8 +34,9 @@ function deployContract(
     
     // execute command
     // const result = execSync("`cat " + cwd + "/" + config.tempHevmCommandFilename + "`", {cwd: cwd});
+    const hevmCommand = craftTerminalCommand(cwd, config.tempHevmCommandFilename);
     try{
-        const result =  execSync(command)
+        const result = executeCommand(cwd, command)
         console.log(result)
         return result
     }catch (e) {
@@ -88,7 +91,6 @@ function checkStateRepoExistence(statePath, cwd) {
  */
  function resetStateRepo(statePath, cwd) {
     console.log("Creating state repository...")
-    
     const fullPath = cwd + "/" + statePath;
     
     // delete old state
@@ -148,10 +150,7 @@ function compileFromFile(source, filename, cwd) {
         bytecode = execSync(command, {cwd: cwd });
     } catch (e) {
         try {
-            bytecode = execSync(command, {
-                cwd: cwd, 
-                env: {...process.env, PATH: `${process.env.PATH}:${process.env.HOME}/.huff/bin`}
-            });
+            bytecode = executeCommand(cwd, command);
         } catch (e) {
             console.log("huffc not found");
             registerError(
@@ -163,7 +162,7 @@ function compileFromFile(source, filename, cwd) {
     }
 
     // remove temp file
-    fs.rmSync(`${cwd}/${filename}`); 
+    // fs.rmSync(`${cwd}/${filename}`); 
     return `0x${bytecode.toString()}`;
 }
 
@@ -198,16 +197,7 @@ function writeMacro(cwd, tempMacroFilename, macro) {
  * throw error if not found
  */
 async function checkHevmInstallation() {
-    try{
-        await commandExists("hevm");
-        return true;
-    } catch (e){ 
-        registerError(
-            e,
-            "Hevm installation required - install here: https://github.com/dapphub/dapptools#installation"
-        )       
-        return false;
-    }
+    return await checkInstallation("hevm");
 }
 
 /**Check huff installation
@@ -217,15 +207,96 @@ async function checkHevmInstallation() {
  * @returns 
  */
 async function checkHuffcInstallation() {
-    try{
-        await commandExists("huffc");
+    return checkInstallation("hevm")
+}
+
+
+/**Check Installation
+ * 
+ * Generalise commandExist to support projects that are running in wsl
+ * @param {*} command 
+ * @returns 
+ */
+async function checkInstallation(command){
+    try {
+        // Depending on what enviornment the code is running in, check if a command is installed
+        if (vscode.env.remoteName === "wsl") {
+            // check installation using unix command executed in wsl
+            const exists = spawnSync("wsl", ["bash", "-l", "which", command], {
+                shell: true
+            });
+            // If the std out returns anything, then we can be confident that the exist command succeeded
+            if (exists.stdout.length > 1) return true;
+        }
+
+        // Fallback to use the commandExists package
+        await commandExists(command);
         return true;
-    } catch (e){ 
+    } catch (e){
         registerError(
             e,
-            "Huffc compiler installation required - install here: https://github.com/huff-language/huff-rs"
+            `${command} installation required - install here: ${getInstallationLink(command)}`
         )       
         return false;
+    }
+}
+
+function craftTerminalCommand(cwd, filename){
+    const isWsl = vscode.env.appHost;
+    return "`cat " + ((isWsl) && "/mnt/c") + cwd + "/" + filename + "`";
+}
+
+/**Execute Command
+ * 
+ * Exec subprocess respecting wsl 
+ * 
+ * @param {String} cwd 
+ * @param {String} command 
+ * @returns 
+ */
+function executeCommand(cwd, command){
+    // Depending on what enviornment the code is running in, check if a command is installed
+    if (vscode.env.remoteName === "wsl") {
+        // check installation using unix command executed in wsl
+        console.log(`wsl bash -l -c "${command}"`)
+        
+        const output = spawnSync('wsl bash -l -c "' + command + '"', {
+            shell: true,
+            cwd
+        });
+
+        console.log("OUTPUT")
+        console.log(output)
+
+        // If the std out returns anything, then we can be confident that the exist command succeeded
+        if (output.stdout.length > 1) {
+            return output.stdout.toString()
+        }
+    }
+    const output = execSync(command, {
+        cwd: cwd, 
+        env: {...process.env, PATH: `${process.env.PATH}:${process.env.HOME}/.huff/bin`}
+    });
+    return output.toString();
+}
+
+/**Get InstallationLink
+ * 
+ * Provide a location to install files from if they are not found locally
+ * @param {String} command 
+ * @returns {String} link
+ */
+function getInstallationLink(command){
+    switch (command){
+        case ("huffc") : {
+            return "https://github.com/huff-language/huff-rs";
+        }
+        case ("hevm"): {
+            return "https://github.com/dapphub/dapptools#installation";
+        }
+        default: {
+            return "Unsupported command supplied";
+        }
     }
 }
 
@@ -277,6 +348,7 @@ module.exports = {
     registerError,
     compileFromFile,
     checkInstallations,
+    craftTerminalCommand,
     purgeCache,
     formatEvenBytes
 }

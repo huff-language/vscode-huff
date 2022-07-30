@@ -8,8 +8,11 @@ const {
   registerError, 
   compileFromFile, 
   checkInstallations, 
-  formatEvenBytes, 
+  formatEvenBytes,
+  craftTerminalCommand, 
 } = require("../debuggerUtils");
+
+const vscode = require("vscode");
 
 /**Start Macro Debugger
  * 
@@ -29,6 +32,9 @@ const {
 async function startMacroDebugger(sourceDirectory, currentFile, imports, macro, argsObject, options){
     if (!(await checkInstallations())) return;
 
+    // Remove /c: appended to source directory on windows systems - nodes file system apis absolutely hate it
+    const cwd = sourceDirectory.replace("/c:","").replace("/mnt/c", "")
+
     try {
        // Create deterministic deployment address for each contract
       const config = {
@@ -42,16 +48,16 @@ async function startMacroDebugger(sourceDirectory, currentFile, imports, macro, 
     }
 
     // Compilable macro is the huff source code for our new macro object
-    let compilableMacro = createCompiledMacro(sourceDirectory, macro, argsObject, currentFile, imports);
+    let compilableMacro = createCompiledMacro(cwd, macro, argsObject, currentFile, imports);
 
     // Create a constructor that will set storage slots -> TODO: run this manually against hevm git repository
     if (config.storageChecked) compilableMacro = overrideStorage(compilableMacro, config);
 
-    const bytecode = compileFromFile(compilableMacro, config.tempMacroFilename, sourceDirectory);
-    const runtimeBytecode = deployContract(bytecode, config, sourceDirectory);
+    const bytecode = compileFromFile(compilableMacro, config.tempMacroFilename, cwd);
+    const runtimeBytecode = deployContract(bytecode, config, cwd);
 
     // deploy the contract to get the runtime code
-    runMacroDebugger(bytecode, runtimeBytecode, config, sourceDirectory);
+    runMacroDebugger(bytecode, runtimeBytecode, config, cwd);
     } catch (e) {
       registerError(e, "Macro Compilation Error, this is pre-release software, please report this issue to the huff team in the discord");
       return null;
@@ -72,8 +78,8 @@ async function startMacroDebugger(sourceDirectory, currentFile, imports, macro, 
  * @returns 
  */
 function createCompiledMacro(cwd, macro, argsObject, currentFile, imports) {
-    // get relative path
-    const dirPath = currentFile.split("/").slice(0,-1).join("/")
+    // get relative path, remove "/:c" appended on windows routes
+    const dirPath = currentFile.split("/").slice(0,-1).join("/");
 
     // flatten imports 
     const paths = imports.map(importPath => `${cwd}/${dirPath}${importPath.replace(/#include\s?"./, "").replace('"', "")}`);
@@ -118,13 +124,13 @@ function runMacroDebugger(bytecode, runtimeBytecode, config, cwd) {
     storageChecked
   } = config;  
   
-  
+  const isWsl = vscode.env.remoteName === "wsl";
   const hevmCommand = `hevm exec \
     --code ${runtimeBytecode.toString()} \
     --address ${hevmContractAddress} \
     --caller ${hevmCaller} \
     --gas 0xffffffff \
-    ${stateChecked || storageChecked  ? "--state " + cwd + "/" + statePath : ""} \
+    ${stateChecked || storageChecked  ? "--state " + ((isWsl) ? "/mnt/c" : "") + cwd + "/" + statePath : ""} \
     ${calldataChecked ? "--calldata " + formatEvenBytes(calldataValue) : ""} \
     --debug`
 
@@ -132,7 +138,8 @@ function runMacroDebugger(bytecode, runtimeBytecode, config, cwd) {
     writeHevmCommand(hevmCommand, config.tempHevmCommandFilename, cwd)
 
     // TODO: run the debugger - attach this to a running terminal
-    const terminalCommand = "`cat " + cwd + "/" + config.tempHevmCommandFilename + "`"; 
+    const terminalCommand = craftTerminalCommand(cwd, config.tempHevmCommandFilename) 
+    // "`cat " + cwd + "/" + config.tempHevmCommandFilename + "`"; 
     runInUserTerminal(terminalCommand);
 }
 
