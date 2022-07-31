@@ -1,6 +1,7 @@
 const createKeccakHash = require('keccak');
 const fs = require("fs");
 const { hevmConfig } = require("../../../options");
+const path = require("path");
 const { 
   deployContract, 
   runInUserTerminal, 
@@ -82,7 +83,7 @@ function createCompiledMacro(cwd, macro, argsObject, currentFile, imports) {
     const dirPath = currentFile.split("/").slice(0,-1).join("/");
 
     // flatten imports 
-    const paths = imports.map(importPath => `${cwd}/${dirPath}${importPath.replace(/#include\s?"./, "").replace('"', "")}`);
+    const paths = imports.map(importPath => path.join(`${cwd}/${dirPath}`,importPath.replace(/#include\s?"/, "").replace('"', "")));
     paths.push(cwd+ "/" + currentFile);
     const files = paths.map(path => fs.readFileSync(path)
       .toString()
@@ -99,14 +100,13 @@ function createCompiledMacro(cwd, macro, argsObject, currentFile, imports) {
       macroBody += "error:\n\t0x0 dup1 stop";
     }
 
-  // //#include "../${currentFile}" - was the top line - do i need it if not compiling from files?
+    // Main contains the debugable macro
     const compilableMacro = `
 ${files.join("\n")}
 #define macro MAIN() = takes(0) returns (0) {
   ${argsObject.reverse().join(" ")}
   ${macroBody}
 }`;
-
 
     return compilableMacro
 }

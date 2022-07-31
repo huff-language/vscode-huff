@@ -49,7 +49,6 @@ class DebuggerViewProvider{
                     
                     const imports = getImports(vscode.window.activeTextEditor?.document.getText())
 
-                    // TODO: get config from radio buttons
                     startDebugger(
                         vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri).uri.path, 
                         vscode.workspace.asRelativePath(vscode.window.activeTextEditor.document.uri), 

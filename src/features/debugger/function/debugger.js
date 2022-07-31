@@ -68,14 +68,17 @@ function flattenFile(cwd, currentFile, imports){
   
   // Get absolute paths
   const paths = imports.map(importPath => path.join(`${cwd}/${dirPath}`,importPath.replace(/#include\s?"/, "").replace('"', "")));
-  paths.push(cwd+ "/" + currentFile);
-  
-  // Read file contents
-  const files = paths.map(path => {    
-    return fs.readFileSync(path)
-      .toString()
-  }
-  );
+
+  // Read file contents and remove other instances of main
+  // main regex 
+  const mainRegex = /#define\s+macro\s+MAIN\s?\((?<args>[^\)]*)\)\s?=\s?takes\s?\((?<takes>[\d])\)\s?returns\s?\((?<returns>[\d])\)\s?{(?<body>[\s\S]*?(?=}))}/gsm
+  const files = [
+    fs.readFileSync(cwd+ "/" + currentFile).toString(),
+    ...paths.map(path => {    
+      return fs.readFileSync(path)
+        .toString().replace(mainRegex, "")
+    })
+  ];
 
   // Flatten and remove imports
   return `${files.join("\n")}`.replace(/#include\s".*"/gm, "");
