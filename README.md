@@ -19,6 +19,16 @@ Open up any .huff file and press `Load Interface` to prepare external functions,
 
 The example above is for an erc721 mint function, entering from the function debugger will allow you to step through execution from the MAIN entrypoint. To select another function, click the drop down and select another function! The drop down will be populated with functions that are defined at the top of the file that you are currently debugging.
 
+**Notice - *Relevant to WSL users***
+To get the extension to run in wsl there is a workaround that you will have to make. Unfortunately, vscode extensions do not run in the same environment as your wsl shell so do not have access to the same path (even when mounted with wsl-remote). If the extension detects that you are working in a remote code space it will attempt to execute huffc and hevm within the wsl shell. The wsl api does not run the ~/.bashrc script (the file which huffup adds to the path), therefore to use this extension in wsl you will have to copy the following into your ~/.profile. 
+```
+if [ -d  "$HOME/.huff/bin" ]; then
+    PATH="$HOME/.huff/bin:$PATH"
+fi
+```
+We will look to address this limitation in further releases of huffup.
+
+
 ### Macro Debugging
 Macro debugging is the tool's most useful feature. Clicking `Load Macros` will load the macros of the currently open file.
 If the macro has no `takes` arguments then the window will look like this:
