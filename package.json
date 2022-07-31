@@ -45,7 +45,7 @@
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch"
   },
-  "main": "./src/extension.js",
+  "main": "./main/out.js",
   "extensionKind": [
     "ui",
     "workspace"
