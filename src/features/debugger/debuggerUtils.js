@@ -162,7 +162,7 @@ function compileFromFile(source, filename, cwd) {
     }
 
     // remove temp file
-    // fs.rmSync(`${cwd}/${filename}`); 
+    fs.rmSync(`${cwd}/${filename}`); 
     return `0x${bytecode.toString()}`;
 }
 
@@ -264,9 +264,6 @@ function executeCommand(cwd, command){
             shell: true,
             cwd
         });
-
-        console.log("OUTPUT")
-        console.log(output)
 
         // If the std out returns anything, then we can be confident that the exist command succeeded
         if (output.stdout.length > 1) {
