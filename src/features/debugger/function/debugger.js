@@ -72,14 +72,13 @@ function flattenFile(cwd, currentFile, imports){
   
   // Read file contents
   const files = paths.map(path => {    
-    console.log(path)
     return fs.readFileSync(path)
       .toString()
   }
   );
 
   // Flatten and remove imports
-  return `${files.join("\n")}`.replace(/#include\s".*"/gsm, "");
+  return `${files.join("\n")}`.replace(/#include\s".*"/gm, "");
 }
 
 
@@ -107,7 +106,6 @@ function runDebugger(bytecode, calldata, flags, config, cwd) {
   --debug \
   ${calldata ? "--calldata " + calldata : ""}`
   
-  console.log(hevmCommand)
   // command is cached into a file as execSync has a limit on the command size that it can execute
   writeHevmCommand(hevmCommand, config.tempHevmCommandFilename, cwd);  
   const terminalCommand = craftTerminalCommand(cwd, config.tempHevmCommandFilename) 

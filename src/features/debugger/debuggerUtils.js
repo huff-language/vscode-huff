@@ -242,8 +242,8 @@ async function checkInstallation(command){
 }
 
 function craftTerminalCommand(cwd, filename){
-    const isWsl = vscode.env.appHost;
-    return "`cat " + ((isWsl) && "/mnt/c") + cwd + "/" + filename + "`";
+    const isWsl = vscode.env.remoteName;
+    return "`cat " + ((isWsl) ? "/mnt/c" : "") + cwd + "/" + filename + "`";
 }
 
 /**Execute Command

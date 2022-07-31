@@ -87,7 +87,7 @@ function createCompiledMacro(cwd, macro, argsObject, currentFile, imports) {
     const files = paths.map(path => fs.readFileSync(path)
       .toString()
       .replace(/#define\s?macro\s?MAIN[\s\S]*?{[\s\S]*?}/gsm, "") // remove main
-      .replace(/#include\s".*"/gsm, "") // remove include
+      .replace(/#include\s".*"/gm, "") // remove include
     );
 
     // replace jump labels

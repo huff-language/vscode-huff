@@ -40,7 +40,6 @@ class DebuggerViewProvider{
             switch (data.type) {
                 case "loadDocument":{
                     const functionSignatures = getFunctionSignaturesAndArgs(vscode.window.activeTextEditor?.document.getText());
-                    console.log(functionSignatures.sighashes);
                     this.addOptionsToFunctionSelector(functionSignatures.sighashes);
                     
                     break;
