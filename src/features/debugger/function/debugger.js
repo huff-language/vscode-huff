@@ -7,6 +7,7 @@ const vscode = require("vscode");
 const { AbiCoder } = require("@ethersproject/abi");
 const { hevmConfig } = require("../../../options");
 const { deployContract, runInUserTerminal, writeHevmCommand, resetStateRepo, registerError, compileFromFile, checkInstallations, purgeCache, craftTerminalCommand } = require("../debuggerUtils");
+const { isWsl, wslMountedDriveRegex } = require("../../../settings");
 
 
 /**Start function debugger 
@@ -22,7 +23,12 @@ async function startDebugger(sourceDirectory, currentFile, imports, functionSele
     if (!(await checkInstallations())) return;
 
     // Remove /c: for wsl mounts / windows
-    const cwd = sourceDirectory.replace("/c:","").replace("/mnt/c", "")
+    let mountedDrive = null;
+    if (isWsl) {
+      mountedDrive = wslMountedDriveRegex.exec(sourceDirectory)?.groups?.drive;
+      sourceDirectory = sourceDirectory.replace(`/mnt/${mountedDrive}`, "");
+    }
+    const cwd = sourceDirectory.replace("/c:","");
     
     // Create deterministic deployment address for each contract for the deployed contract
     const config = {
@@ -32,7 +38,8 @@ async function startDebugger(sourceDirectory, currentFile, imports, functionSele
         .digest("hex")
         .toString("hex")
         .slice(0,42),
-      stateChecked: true
+      stateChecked: true,
+      mountedDrive
     }
     
     // Get calldata
@@ -97,7 +104,6 @@ function flattenFile(cwd, currentFile, imports){
  */
 function runDebugger(bytecode, calldata, flags, config, cwd) {
   console.log("Entering debugger...")
-  const isWsl = vscode.env.remoteName === "wsl";
 
   // Hevm Command
   const hevmCommand = `hevm exec \
@@ -105,13 +111,13 @@ function runDebugger(bytecode, calldata, flags, config, cwd) {
   --address ${config.hevmContractAddress} \
   --caller ${config.hevmCaller} \
   --gas 0xffffffff \
-  --state ${((isWsl) ? "/mnt/c" : "") + cwd + "/" + config.statePath} \
+  --state ${((isWsl) ? ("/mnt/" + config.mountedDrive)  : "") + cwd + "/" + config.statePath} \
   --debug \
   ${calldata ? "--calldata " + calldata : ""}`
   
   // command is cached into a file as execSync has a limit on the command size that it can execute
   writeHevmCommand(hevmCommand, config.tempHevmCommandFilename, cwd);  
-  const terminalCommand = craftTerminalCommand(cwd, config.tempHevmCommandFilename) 
+  const terminalCommand = craftTerminalCommand(cwd, config) 
   runInUserTerminal(terminalCommand);
 }
 
