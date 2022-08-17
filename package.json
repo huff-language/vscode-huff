@@ -1,6 +1,6 @@
 {
   "name": "huff-language",
-  "version": "0.0.26",
+  "version": "0.0.28",
   "displayName": "Huff",
   "preview": true,
   "icon": "resources/huff.png",
@@ -45,7 +45,7 @@
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch"
   },
-  "main": "./main/out.js",
+  "main": "./out/main.js",
   "extensionKind": [
     "ui",
     "workspace"
