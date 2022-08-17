@@ -2,6 +2,7 @@ const vscode = require("vscode");
 const commandExists = require("command-exists");
 const fs = require("fs");
 const {execSync, spawnSync} = require("child_process");
+const { isWsl } = require("../../settings");
 
 
 /**Deploy Contract
@@ -23,9 +24,8 @@ function deployContract(
         console.log("resetting state")
         checkStateRepoExistence(config.statePath, cwd)
     }
-
-    const isWsl = vscode.env.remoteName === "wsl";
-    const statePath = `${(isWsl) ? "/mnt/c" : ""}${cwd}/${config.statePath}`
+    
+    const statePath = `${(isWsl) ? ("/mnt/" + config.mountedDrive) : ""}${cwd}/${config.statePath}`
     const command = `hevm exec --code ${bytecode} --address ${config.hevmContractAddress} --create --caller ${config.hevmCaller} --gas 0xffffffff ${(config.stateChecked || config.storageChecked)  ? "--state " + statePath : ""}`
     console.log(command)
 
@@ -34,7 +34,7 @@ function deployContract(
     
     // execute command
     // const result = execSync("`cat " + cwd + "/" + config.tempHevmCommandFilename + "`", {cwd: cwd});
-    const hevmCommand = craftTerminalCommand(cwd, config.tempHevmCommandFilename);
+    const hevmCommand = craftTerminalCommand(cwd, config);
     try{
         const result = executeCommand(cwd, command)
         console.log(result)
@@ -241,9 +241,8 @@ async function checkInstallation(command){
     }
 }
 
-function craftTerminalCommand(cwd, filename){
-    const isWsl = vscode.env.remoteName;
-    return "`cat " + ((isWsl) ? "/mnt/c" : "") + cwd + "/" + filename + "`";
+function craftTerminalCommand(cwd, config){
+    return "`cat " + ((isWsl) && ("/mnt/" + config.mountedDrive)) + cwd + "/" + config.tempHevmCommandFilename + "`";
 }
 
 /**Execute Command

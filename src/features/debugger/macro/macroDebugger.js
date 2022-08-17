@@ -14,6 +14,7 @@ const {
 } = require("../debuggerUtils");
 
 const vscode = require("vscode");
+const { isWsl, wslMountedDriveRegex } = require('../../../settings');
 
 /**Start Macro Debugger
  * 
@@ -34,13 +35,19 @@ async function startMacroDebugger(sourceDirectory, currentFile, imports, macro, 
     if (!(await checkInstallations())) return;
 
     // Remove /c: appended to source directory on windows systems - nodes file system apis absolutely hate it
-    const cwd = sourceDirectory.replace("/c:","").replace("/mnt/c", "")
+    let mountedDrive = null;
+    if (isWsl) {
+      mountedDrive = wslMountedDriveRegex.exec(sourceDirectory)?.groups?.drive;
+      sourceDirectory = sourceDirectory.replace(`/mnt/${mountedDrive}`, "");
+    }
+    const cwd = sourceDirectory.replace("/c:","")
 
     try {
        // Create deterministic deployment address for each contract
       const config = {
         ...hevmConfig,
         ...options,
+        mountedDrive,
         hevmContractAddress: createKeccakHash("keccak256")
                               .update(Buffer.from(macro.toString()))
                               .digest("hex")
@@ -121,16 +128,16 @@ function runMacroDebugger(bytecode, runtimeBytecode, config, cwd) {
     statePath, 
     calldataChecked,
     calldataValue,
-    storageChecked
+    storageChecked,
+    mountedDrive
   } = config;  
   
-  const isWsl = vscode.env.remoteName === "wsl";
   const hevmCommand = `hevm exec \
     --code ${runtimeBytecode.toString()} \
     --address ${hevmContractAddress} \
     --caller ${hevmCaller} \
     --gas 0xffffffff \
-    ${stateChecked || storageChecked  ? "--state " + ((isWsl) ? "/mnt/c" : "") + cwd + "/" + statePath : ""} \
+    ${stateChecked || storageChecked  ? "--state " + ((isWsl) ? ("/mnt/" + mountedDrive) : "") + cwd + "/" + statePath : ""} \
     ${calldataChecked ? "--calldata " + formatEvenBytes(calldataValue) : ""} \
     --debug`
 
@@ -138,7 +145,7 @@ function runMacroDebugger(bytecode, runtimeBytecode, config, cwd) {
     writeHevmCommand(hevmCommand, config.tempHevmCommandFilename, cwd)
 
     // TODO: run the debugger - attach this to a running terminal
-    const terminalCommand = craftTerminalCommand(cwd, config.tempHevmCommandFilename) 
+    const terminalCommand = craftTerminalCommand(cwd, config) 
     // "`cat " + cwd + "/" + config.tempHevmCommandFilename + "`"; 
     runInUserTerminal(terminalCommand);
 }
