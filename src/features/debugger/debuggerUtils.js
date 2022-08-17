@@ -242,7 +242,7 @@ async function checkInstallation(command){
 }
 
 function craftTerminalCommand(cwd, config){
-    return "`cat " + ((isWsl) && ("/mnt/" + config.mountedDrive)) + cwd + "/" + config.tempHevmCommandFilename + "`";
+    return "`cat " + ((isWsl) ? ("/mnt/" + config.mountedDrive) : "") + cwd + "/" + config.tempHevmCommandFilename + "`";
 }
 
 /**Execute Command
