@@ -19,6 +19,11 @@
         "body": ["#define function ${1:name}(${2:args}) ${3:extensions} ${4:returns} (${5:returnType})"],
         "description": "Define a new interface function"
     },
+  "error": {
+    "prefix": ["error"],
+    "body": ["#define error ${1:ErrorName}(${2:args})"],
+    "description": "Define a new error"
+  },
     "stop": {
         "prefix": "stop",
         "body": "stop"
