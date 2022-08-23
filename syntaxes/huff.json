@@ -6,11 +6,12 @@
     { "include": "#comment" },
     { "include": "#number" },
     { "include": "#declaration" },
-    { "include": "#interface"},
+    { "include": "#interface" },
+    { "include": "#error" },
     { "include": "#control" },
     { "include": "#macro-call" },
     { "include": "#opcodes" },
-    { "include": "#constant"}
+    { "include": "#constant" }
   ],
   "repository": {
     "natspec": {
@@ -19,17 +20,13 @@
           "begin": "/\\*\\*",
           "end": "\\*/",
           "name": "comment.block.documentation.huff",
-          "patterns": [
-            { "include": "#natspec-tags" }
-          ]
+          "patterns": [{ "include": "#natspec-tags" }]
         },
         {
           "begin": "///",
           "end": "$",
           "name": "comment.block.documentation.huff",
-          "patterns": [
-            { "include": "#natspec-tags" }
-          ]
+          "patterns": [{ "include": "#natspec-tags" }]
         }
       ]
     },
@@ -111,13 +108,25 @@
     "declaration": {
       "patterns": [
         { "include": "#declaration-macro" },
+        { "include": "#declaration-fn" },
         { "include": "#declaration-jumptable" },
         { "include": "#declaration-jumptable-packed" },
         { "include": "#predeclaration-template" }
       ]
-    },    
+    },
     "declaration-macro": {
       "match": "(#define\\s+macro)(\\s+([A-Za-z_]\\w*))\\b(\\s+=\\s+((takes)\\s*(\\((\\d+)\\)))(\\s+(returns)\\s*(\\((\\d+)\\))))?",
+      "captures": {
+        "1": { "name": "storage.macro.huff" },
+        "3": { "name": "entity.name.function.huff" },
+        "6": { "name": "storage.takes.huff" },
+        "8": { "name": "constant.numeric.decimal.huff" },
+        "10": { "name": "storage.returns.huff" },
+        "12": { "name": "constant.numeric.decimal.huff" }
+      }
+    },
+    "declaration-fn": {
+      "match": "(#define\\s+fn)(\\s+([A-Za-z_]\\w*))\\b(\\s+=\\s+((takes)\\s*(\\((\\d+)\\)))(\\s+(returns)\\s*(\\((\\d+)\\))))?",
       "captures": {
         "1": { "name": "storage.macro.huff" },
         "3": { "name": "entity.name.function.huff" },
@@ -142,28 +151,40 @@
       }
     },
 
+    "error": {
+      "patterns": [{ "include": "#error-definition" }]
+    },
+    "error-definition": {
+      "match": "(#define\\s+error)(\\s+([A-Za-z_]\\w*))\\b",
+      "captures": {
+        "1": { "name": "storage.function.huff" },
+        "3": { "name": "entity.name.function.huff" },
+        "8": { "name": "keyword.modifier.huff" }
+      }
+    },
+
     "interface": {
       "patterns": [
-        { "include": "#interface-function"},
-        { "include": "#interface-event"},
-        { "include": "#interface-primitives"},
-        { "include": "#interface-extensions"}
+        { "include": "#interface-function" },
+        { "include": "#interface-event" },
+        { "include": "#interface-primitives" },
+        { "include": "#interface-extensions" }
       ]
     },
     "interface-function": {
       "match": "(#define\\s+function)(\\s+([A-Za-z_]\\w*))\\b",
       "captures": {
         "1": { "name": "storage.function.huff" },
-        "3": { "name": "entity.name.function.huff"},
-        "8": { "name": "keyword.modifier.huff"}
+        "3": { "name": "entity.name.function.huff" },
+        "8": { "name": "keyword.modifier.huff" }
       }
     },
     "interface-event": {
       "match": "(#define\\s+event)(\\s+([A-Za-z_]\\w*))\\b",
       "captures": {
         "1": { "name": "storage.event.huff" },
-        "3": { "name": "entity.name.function.huff"},
-        "8": { "name": "keyword.modifier.huff"}
+        "3": { "name": "entity.name.function.huff" },
+        "8": { "name": "keyword.modifier.huff" }
       }
     },
     "interface-primitives": {
@@ -175,7 +196,7 @@
     "interface-extensions": {
       "match": "\\b(nonpayable|view|returns)\\b",
       "captures": {
-        "1": { "name": "storage.type.interface.huff"}
+        "1": { "name": "storage.type.interface.huff" }
       }
     },
 
@@ -214,7 +235,7 @@
         "1": { "name": "keyword.operator.arithmetic.huff" }
       }
     },
-    
+
     "opcodes-stop": {
       "match": "\\b(selfdestruct|invalid|revert|return|stop)\\b",
       "name": "support.type.exception.huff"
@@ -224,41 +245,38 @@
       "name": "variable.other.push.huff"
     },
     "template-parameter-call": {
-        "match": "\\<\\s*[A-Za-z0-9_]+\\s*\\>",
-        "name": "variable.parameter"
+      "match": "\\<\\s*[A-Za-z0-9_]+\\s*\\>",
+      "name": "variable.parameter"
     },
     "macro-call": {
       "match": "(\\b([A-Za-z_]\\w*)\\s*)((\\<)\\s*((([A-Za-z_]\\w*)(\\s*,\\s*))*([A-Za-z_]\\w*))\\s*(\\>))?(\\()",
       "captures": {
         "1": { "name": "entity.name.function.huff" },
         "2": { "name": "entity.name.function.huff" },
-        "5": { "name": "variable.parameter"}
+        "5": { "name": "variable.parameter" }
       }
     },
 
-
     "constant": {
       "patterns": [
-        { "include": "#constant-definition"},
-        { "include": "#constant-reference"}
+        { "include": "#constant-definition" },
+        { "include": "#constant-reference" }
       ]
     },
     "constant-definition": {
       "match": "(#define\\s+constant)(\\s+([A-Za-z_]\\w*))\\b",
       "captures": {
-        "1": {"name": "storage.constant.huff"},
-        "3": {"name": "constant.name.huff"}
+        "1": { "name": "storage.constant.huff" },
+        "3": { "name": "constant.name.huff" }
       }
     },
-
 
     "constant-reference": {
       "match": "(\\[[A-Z_]+\\])",
       "captures": {
-        "1": {"name": "constant.name.huff"}
+        "1": { "name": "constant.name.huff" }
       }
     }
-    
   },
   "scopeName": "source.huff"
 }
