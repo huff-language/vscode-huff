@@ -1,8 +1,10 @@
-# Run when a release is cut
+# Run on master and feature branches
 on:
   push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+    branches:
+      - master
+    paths-ignore:
+      - ".vscode/**"
 
 jobs:
   publish:
@@ -71,4 +73,13 @@ jobs:
       # Only publish on master branch
       - name: Publish pre-release
         if: github.ref == 'refs/heads/master'
-        run: npm run deploy:release
+        run: npm run deploy:prerelease
+
+      - name: Create a release
+        if: github.ref == 'refs/heads/master'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.gitversion.outputs.semVer }}-rc
+          release_name: v${{ steps.gitversion.outputs.semVer }}-rc
