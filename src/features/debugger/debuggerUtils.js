@@ -1,8 +1,7 @@
 const vscode = require("vscode");
 const commandExists = require("command-exists");
 const fs = require("fs");
-const {execSync, spawnSync} = require("child_process");
-const { isWsl } = require("../../settings");
+const { execSync, spawnSync } = require("child_process");
 
 
 /**Deploy Contract
@@ -16,30 +15,30 @@ const { isWsl } = require("../../settings");
  * @returns 
  */
 function deployContract(
-    bytecode, 
-    config, 
+    bytecode,
+    config,
     cwd
-  ) {
-    if (config.stateChecked || config.storageChecked){
+) {
+    if (config.stateChecked || config.storageChecked) {
         console.log("resetting state")
         checkStateRepoExistence(config.statePath, cwd)
     }
-    
-    const statePath = `${(isWsl) ? ("/mnt/" + config.mountedDrive) : ""}${cwd}/${config.statePath}`
-    const command = `hevm exec --code ${bytecode} --address ${config.hevmContractAddress} --create --caller ${config.hevmCaller} --gas 0xffffffff ${(config.stateChecked || config.storageChecked)  ? "--state " + statePath : ""}`
+
+    const statePath = `${(config.mountedDrive) ? ("/mnt/" + config.mountedDrive) : ""}${cwd}/${config.statePath}`
+    const command = `hevm exec --code ${bytecode} --address ${config.hevmContractAddress} --create --caller ${config.hevmCaller} --gas 0xffffffff ${(config.stateChecked || config.storageChecked) ? "--state " + statePath : ""}`
     console.log(command)
 
     // cache command
     writeHevmCommand(command, config.tempHevmCommandFilename, cwd);
-    
+
     // execute command
     // const result = execSync("`cat " + cwd + "/" + config.tempHevmCommandFilename + "`", {cwd: cwd});
     const hevmCommand = craftTerminalCommand(cwd, config);
-    try{
+    try {
         const result = executeCommand(cwd, command)
         console.log(result)
         return result
-    }catch (e) {
+    } catch (e) {
         console.log("deployment failure")
         console.log(e.message)
         console.log("e.stdout", e.stdout.toString());
@@ -57,24 +56,24 @@ function deployContract(
  * 
  * @param {String} command 
  */
-function runInUserTerminal(command){
-    const terminal = vscode.window.createTerminal({name: "Huff debug"});
+function runInUserTerminal(command) {
+    const terminal = vscode.window.createTerminal({ name: "Huff debug" });
     terminal.sendText(command);
     terminal.show();
-  }
+}
 
 
-function writeHevmCommand(command, file, cwd){
-    
+function writeHevmCommand(command, file, cwd) {
+
     try { !fs.accessSync(`${cwd}/cache`) }
-    catch (e) {fs.mkdirSync(`${cwd}/cache`) }
+    catch (e) { fs.mkdirSync(`${cwd}/cache`) }
     fs.writeFileSync(`${cwd}/${file}`, command);
 }
 
 
-function purgeCache(cwd){
-    try { fs.rmSync(`${cwd}/cache`, {recursive:true}) }
-    catch (e){console.log("Cache didn't exist")};
+function purgeCache(cwd) {
+    try { fs.rmSync(`${cwd}/cache`, { recursive: true }) }
+    catch (e) { console.log("Cache didn't exist") };
 }
 
 function checkStateRepoExistence(statePath, cwd) {
@@ -89,42 +88,42 @@ function checkStateRepoExistence(statePath, cwd) {
  * TODO: Windows compatibility
  * @param statePath 
  */
- function resetStateRepo(statePath, cwd) {
+function resetStateRepo(statePath, cwd) {
     console.log("Creating state repository...")
     const fullPath = cwd + "/" + statePath;
-    
+
     // delete old state
-    try{ fs.rmSync(fullPath, {recursive:true}) } 
-    catch (e){console.log("Cache didn't exist")};
+    try { fs.rmSync(fullPath, { recursive: true }) }
+    catch (e) { console.log("Cache didn't exist") };
 
     // check if a cache folder exists
     try { !fs.accessSync(`${cwd}/cache`) }
-    catch (e) {fs.mkdirSync(`${cwd}/cache`) }
+    catch (e) { fs.mkdirSync(`${cwd}/cache`) }
     fs.mkdirSync(fullPath);
 
-    
+
     const initStateRepositoryCommand = `git init`;
     const setHuffAsCommitter = `git config user.name "huff" && git config user.email "huff"`;
     const initCommit = `git commit --allow-empty -m "init"`;
-    execSync(initStateRepositoryCommand, {cwd: fullPath})
-    execSync(setHuffAsCommitter, {cwd: fullPath})
-    execSync(initCommit, {cwd: fullPath})
+    execSync(initStateRepositoryCommand, { cwd: fullPath })
+    execSync(setHuffAsCommitter, { cwd: fullPath })
+    execSync(initCommit, { cwd: fullPath })
     console.log("Created state repository...")
-  }
-  
+}
 
-  /**Compile
- * 
- * @param {String} sourceDirectory The location in which the users workspace is - where the child processes should be executed
- * @param {String} fileName 
- * @returns 
- */
+
+/**Compile
+* 
+* @param {String} sourceDirectory The location in which the users workspace is - where the child processes should be executed
+* @param {String} fileName 
+* @returns 
+*/
 function compile(sourceDirectory, fileName) {
     console.log("Compiling contract...")
 
     // having issues with the function level debugger
     const command = `huffc ${fileName} --bytecode`
-    const bytecode = execSync(command, {cwd: sourceDirectory});
+    const bytecode = execSync(command, { cwd: sourceDirectory });
     return `0x${bytecode.toString()}`;
 }
 
@@ -141,13 +140,13 @@ function compile(sourceDirectory, fileName) {
  */
 function compileFromFile(source, filename, cwd) {
     writeHevmCommand(source, filename, cwd);
-    
+
     const command = `huffc ${filename} --bytecode`
     let bytecode;
 
     // if huffc is not found, then try add huffup to path
     try {
-        bytecode = execSync(command, {cwd: cwd });
+        bytecode = execSync(command, { cwd: cwd });
     } catch (e) {
         try {
             bytecode = executeCommand(cwd, command);
@@ -156,13 +155,13 @@ function compileFromFile(source, filename, cwd) {
             registerError(
                 e,
                 "Huffc was not found in the system path, add it to $PATH or install here: https://github.com/huff-language/huff-rs"
-            )       
+            )
             return false;
         }
     }
 
     // remove temp file
-    fs.rmSync(`${cwd}/${filename}`); 
+    fs.rmSync(`${cwd}/${filename}`);
     return `0x${bytecode.toString()}`;
 }
 
@@ -172,7 +171,7 @@ function compileFromFile(source, filename, cwd) {
  * @param {String} filename 
  * @param {String} cwd 
  */
-function createTempFile(source, filename, cwd){
+function createTempFile(source, filename, cwd) {
     fs.writeFileSync(`${cwd}/${filename}`, source);
 }
 
@@ -185,11 +184,11 @@ function createTempFile(source, filename, cwd){
  * @param {String} cwd 
  * @param {String} tempMacroFilename 
  * @param {String} macro 
- */ 
+ */
 function writeMacro(cwd, tempMacroFilename, macro) {
     fs.writeFileSync(`${cwd}/${tempMacroFilename}.huff`, macro);
 }
-  
+
 
 /**Check Hevm Installation
  * 
@@ -217,7 +216,7 @@ async function checkHuffcInstallation() {
  * @param {*} command 
  * @returns 
  */
-async function checkInstallation(command){
+async function checkInstallation(command) {
     try {
         // Depending on what enviornment the code is running in, check if a command is installed
         if (vscode.env.remoteName === "wsl") {
@@ -232,17 +231,17 @@ async function checkInstallation(command){
         // Fallback to use the commandExists package
         await commandExists(command);
         return true;
-    } catch (e){
+    } catch (e) {
         registerError(
             e,
             `${command} installation required - install here: ${getInstallationLink(command)}`
-        )       
+        )
         return false;
     }
 }
 
-function craftTerminalCommand(cwd, config){
-    return "`cat " + ((isWsl) ? ("/mnt/" + config.mountedDrive) : "") + cwd + "/" + config.tempHevmCommandFilename + "`";
+function craftTerminalCommand(cwd, config) {
+    return "`cat " + ((config.mountedDrive) ? ("/mnt/" + config.mountedDrive) : "") + cwd + "/" + config.tempHevmCommandFilename + "`";
 }
 
 /**Execute Command
@@ -253,12 +252,12 @@ function craftTerminalCommand(cwd, config){
  * @param {String} command 
  * @returns 
  */
-function executeCommand(cwd, command){
+function executeCommand(cwd, command) {
     // Depending on what enviornment the code is running in, check if a command is installed
     if (vscode.env.remoteName === "wsl") {
         // check installation using unix command executed in wsl
         console.log(`wsl bash -l -c "${command}"`)
-        
+
         const output = spawnSync('wsl bash -l -c "' + command + '"', {
             shell: true,
             cwd
@@ -270,8 +269,8 @@ function executeCommand(cwd, command){
         }
     }
     const output = execSync(command, {
-        cwd: cwd, 
-        env: {...process.env, PATH: `${process.env.PATH}:${process.env.HOME}/.huff/bin`}
+        cwd: cwd,
+        env: { ...process.env, PATH: `${process.env.PATH}:${process.env.HOME}/.huff/bin` }
     });
     return output.toString();
 }
@@ -282,9 +281,9 @@ function executeCommand(cwd, command){
  * @param {String} command 
  * @returns {String} link
  */
-function getInstallationLink(command){
-    switch (command){
-        case ("huffc") : {
+function getInstallationLink(command) {
+    switch (command) {
+        case ("huffc"): {
             return "https://github.com/huff-language/huff-rs";
         }
         case ("hevm"): {
@@ -301,7 +300,7 @@ function getInstallationLink(command){
  * Check for both hevm and huffc installations
  * @returns {Promise<Boolean>} 
  */
-async function checkInstallations(){
+async function checkInstallations() {
     const results = await Promise.all([
         checkHevmInstallation(),
         checkHuffcInstallation
@@ -326,10 +325,10 @@ async function registerError(e, message) {
  * @param {String} bytes
  */
 const formatEvenBytes = (bytes) => {
-	if (bytes.length % 2) {
-	  return bytes.replace("0x", "0x0");
-	}
-	return bytes;
+    if (bytes.length % 2) {
+        return bytes.replace("0x", "0x0");
+    }
+    return bytes;
 };
 
 
