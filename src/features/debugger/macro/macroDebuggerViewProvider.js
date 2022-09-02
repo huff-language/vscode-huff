@@ -114,7 +114,6 @@ class MacroDebuggerViewProvider {
               calldataValue,
               storageChecked,
               stateValues,
-              calldataValue,
               callValueChecked,
               callValue,
             }
