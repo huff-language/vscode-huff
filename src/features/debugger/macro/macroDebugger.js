@@ -169,7 +169,7 @@ function runMacroDebugger(bytecode, runtimeBytecode, config, cwd) {
     ${
       stateChecked || storageChecked
         ? "--state " +
-          (isWsl ? "/mnt/" + mountedDrive : "") +
+          (config.mountedDrive ? "/mnt/" + mountedDrive : "") +
           cwd +
           "/" +
           statePath

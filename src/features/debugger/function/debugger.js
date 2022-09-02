@@ -139,7 +139,10 @@ function runDebugger(bytecode, calldata, flags, config, cwd) {
   --caller ${config.hevmCaller} \
   --gas 0xffffffff \
   --state ${
-    (isWsl ? "/mnt/" + config.mountedDrive : "") + cwd + "/" + config.statePath
+    (config.mountedDrive ? "/mnt/" + config.mountedDrive : "") +
+    cwd +
+    "/" +
+    config.statePath
   } \
   --debug \
   ${config.callValueChecked ? "--value " + config.callValue : ""} \
