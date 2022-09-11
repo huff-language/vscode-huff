@@ -188,4 +188,5 @@ async function encodeCalldata(functionSelector, argsObject) {
 
 module.exports = {
   startDebugger,
+  flattenFile,
 };

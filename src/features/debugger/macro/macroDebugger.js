@@ -13,7 +13,6 @@ const {
   craftTerminalCommand,
 } = require("../debuggerUtils");
 
-const vscode = require("vscode");
 const { isWsl, wslMountedDriveRegex } = require("../../../settings");
 
 /**Start Macro Debugger

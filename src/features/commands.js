@@ -88,5 +88,6 @@ function outputContentToSideEditor(content){
 
 module.exports = {
     generateSwitchTable,
-    generateEventSignatures
+    generateEventSignatures,
+    outputContentToSideEditor
 }

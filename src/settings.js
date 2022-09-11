@@ -8,18 +8,20 @@
 const vscode = require("vscode");
 
 const LANGUAGE_ID = "huff";
+const EXTENSION_NAME = "huff-language";
 
 // Get current environment
 const isWsl = vscode.env.remoteName === "wsl";
-const wslMountedDriveRegex = /\/mnt\/(?<drive>.)/m
+const wslMountedDriveRegex = /\/mnt\/(?<drive>.)/m;
 
 function extensionConfig() {
   return vscode.workspace.getConfiguration(LANGUAGE_ID);
 }
 
 module.exports = {
-  LANGUAGE_ID: LANGUAGE_ID,
+  LANGUAGE_ID,
+  EXTENSION_NAME,
   extensionConfig,
   isWsl,
-  wslMountedDriveRegex
+  wslMountedDriveRegex,
 };
