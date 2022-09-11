@@ -1,5 +1,6 @@
 // TODO: DELETE THIS FILE
 
+// Alternative traversal method
 function calculateJumpPaths(macro, cycleLabel) {
   for (let i = 0; i < macro.length; i++) {
     const op = macro[i];
@@ -17,18 +18,13 @@ function calculateJumpPaths(macro, cycleLabel) {
 
       if (op == "jumpi") {
         // Recursively find both if an else paths
+        // TODO: bring back jumpis
         const ifPath = calculateJumpPaths(macro.slice(jumpIndex), label);
         const elsePath = calculateJumpPaths(macro.slice(i + 1), label);
 
-        // For each path in sub path add the current to the path
-        for (const path of ifPath) {
-          path.unshift(...preJump);
-        }
-        for (const path of elsePath) {
-          path.unshift(...preJump);
-        }
+        preJump.push([ifPath, elsePath]);
 
-        return [...ifPath, ...elsePath];
+        return preJump;
       } else {
         // Recursively find jump following
         const subPaths = calculateJumpPaths(macro.slice(jumpIndex), label);
@@ -40,7 +36,7 @@ function calculateJumpPaths(macro, cycleLabel) {
     }
   }
 
-  return [macro];
+  return macro;
 }
 
 const macro = [
@@ -70,4 +66,4 @@ const macro = [
   "0x3",
 ];
 
-console.log(calculateJumpPaths(macro));
+console.log(JSON.stringify(calculateJumpPaths(macro)));

@@ -1,4 +1,8 @@
-const { outputContentToSideEditor } = require("../commands");
+const {
+  outputContentToSideEditor,
+  outputMdToSideEditor,
+} = require("../commands");
+const { CliPrettify } = require("markdown-table-prettify");
 
 function renderAnnotatedStack(annotatedStacks) {
   /// The annotated stacks object is an array of annotated stacks, which includes the opcode
@@ -12,32 +16,29 @@ function renderAnnotatedStack(annotatedStacks) {
 
   let content = "";
   // get the longest stack number
-  const longestStack = getLongestStack(annotatedStacks);
 
-  const branch = "├─";
+  let header = "|Opcode|StackDepth|\n";
+  header += "|-----|-----|\n";
 
   // compare all of the stacks with the original
 
-  for (let i = 0; i < longestStack; ++i) {
-    let renderRow = branch;
-
-    // longest stack
-    for (const stack of annotatedStacks) {
-      // If all of  the stacks are the same then we do not have a branch to render
-      if (stack?.[i]) {
-      }
+  for (let i = 0; i < annotatedStacks.length; ++i) {
+    content += `Path ${i + 1}\n`;
+    let branchContent = header;
+    for (let j = 0; j < annotatedStacks[i].length; ++j) {
+      branchContent +=
+        "|" +
+        annotatedStacks[i][j].op +
+        "|" +
+        annotatedStacks[i][j].stack +
+        "|\n";
     }
+    branchContent = CliPrettify.prettify(branchContent);
+    branchContent += "\n";
+    content += branchContent;
   }
 
-  outputContentToSideEditor(content);
-}
-
-function getLongestStack(stacks) {
-  let max = 0;
-  for (const stack of stacks) {
-    max = stack.length > max ? stack.length : max;
-  }
-  return max;
+  outputMdToSideEditor(content);
 }
 
 module.exports = {
