@@ -11,14 +11,11 @@ function renderAnnotatedStack(annotatedStacks) {
   /// the same branch of instructions.
   /// As soon as the operations change we can assume that this is due to a jump taking place
 
-  console.log("annotatedStacks");
-  console.log(annotatedStacks);
-
   let content = "";
   // get the longest stack number
 
-  let header = "|Opcode|StackDepth|\n";
-  header += "|-----|-----|\n";
+  let header = "|Opcode|StackDepth|Takes|Returns|\n";
+  header += "|-----|-----|-----|-----|\n";
 
   // compare all of the stacks with the original
 
@@ -26,12 +23,8 @@ function renderAnnotatedStack(annotatedStacks) {
     content += `Path ${i + 1}\n`;
     let branchContent = header;
     for (let j = 0; j < annotatedStacks[i].length; ++j) {
-      branchContent +=
-        "|" +
-        annotatedStacks[i][j].op +
-        "|" +
-        annotatedStacks[i][j].stack +
-        "|\n";
+      const { op, stack, tks, rets } = annotatedStacks[i][j];
+      branchContent += `|${op}|${stack}|${tks}|${rets}|\n`;
     }
     branchContent = CliPrettify.prettify(branchContent);
     branchContent += "\n";

@@ -66,10 +66,9 @@ class CodeLensProvider {
       // Get all possible stack states for a macro
       const [stacks, annotatedStacks] = getPossibleStacks(codeLens);
 
-      console.log(stacks);
       let lensText = "";
 
-      // TODO: clean this up
+      // TODO: clean
       if (stacks.length > 1) {
         lensText += "Multiple stack states found: ";
         for (const stackCount of stacks) {
@@ -108,10 +107,9 @@ function getPossibleStacks(codeLens) {
     .trim()
     .split(" ");
 
-  // TODO: have a less hacky empty macro case
+  // Empty case
   if (strippedMacro.length === 1 && strippedMacro[0] === "") return [0];
 
-  // TODO: Create a method to flatten the path tree
   const possiblePaths = calculateJumpPaths(strippedMacro);
 
   const stacks = [];
@@ -146,9 +144,11 @@ function calcStack(flattenedFile, macro, takes, returns) {
   // Keep an annotated stack alongside the running average to
   // enable expanded debugging
   const annotatedStack = [];
+
   for (const op of macro) {
     // TODO: check for builtins manually first
-
+    let tks = 0;
+    let rets = 1;
     switch (op.toString().charAt(0)) {
       case "[": {
         stack++;
@@ -165,6 +165,10 @@ function calcStack(flattenedFile, macro, takes, returns) {
       }
       default: {
         if (opcodes[op]) {
+          // For use in annotating the stack
+          tks = opcodes[op].takes;
+          rets = opcodes[op].returns;
+
           // Catch under-flows
           stack -= opcodes[op].takes;
           if (stack < 0) return -1;
@@ -180,24 +184,27 @@ function calcStack(flattenedFile, macro, takes, returns) {
               flattenedFile,
               match.groups.name
             );
-            console.log(match.groups.name, takes, returns);
-
-            stack -= +takes;
+            tks = takes;
+            rets = returns;
 
             // Catch under-flows
+            stack -= +takes;
             if (stack < 0) return -1;
-
             stack += +returns;
           } else {
             // if it is a branch label increment, else a jumpdest, do nothing
-            if (!op.endsWith(":")) stack++;
+            if (!op.endsWith(":")) {
+              stack++;
+              tks = 0;
+              rets = 0;
+            }
           }
         }
       }
     }
 
     // Store operation and depth
-    annotatedStack.push({ op, stack });
+    annotatedStack.push({ op, stack, tks, rets });
   }
 
   return [stack, annotatedStack];
@@ -235,10 +242,7 @@ function calculateJumpPaths(macro, cycleLabel) {
         const elsePath = calculateJumpPaths(macro.slice(i + 1), label);
 
         // For each path in sub path add the current to the path
-        // TODO: Accidentially removes the jumpi - Add it back in
-        // TODO: Accidentially removes the jumpi - Add it back in
-        // TODO: Accidentially removes the jumpi - Add it back in
-        // TODO: Accidentially removes the jumpi - Add it back in
+        // TODO: removes the jumpi - Add it back in
         for (const path of ifPath) {
           path.unshift(...preJump);
         }
