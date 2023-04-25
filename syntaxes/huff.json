@@ -241,7 +241,7 @@
       "name": "support.type.exception.huff"
     },
     "opcodes-stack": {
-      "match": "\\b((swap1|dup1)[0-6]|(swap|dup)[1-9]|push3[0-2]|push[1-2][0-9]|push[1-9])\\b",
+      "match": "\\b((swap1|dup1)[0-6]|(swap|dup)[1-9]|push3[0-2]|push[1-2][0-9]|push[0-9])\\b",
       "name": "variable.other.push.huff"
     },
     "template-parameter-call": {
