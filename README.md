@@ -1,6 +1,6 @@
 # VSCode Huff
 
-**NOTE: Debugger requires path installations of [huffc](https://github.com/huff-language/huff-rs) and [hevm](https://github.com/dapphub/dapptools/tree/master/src/hevm) from [dapptools](https://github.com/dapphub/dapptools) before use.**
+**NOTE: Debugger requires path installations of [huffc](https://github.com/huff-language/huff-rs) and [hevm](https://github.com/ethereum/hevm) before use.**
 
 > A mirror version of this repository can be found on [open-vsx](https://open-vsx.org/extension/huff-language/huff-language)
 
@@ -57,7 +57,7 @@ If the selected macro has `takes(n)` then n windows will appear to allow setting
 
 ## Code Generation
 
-**Switch table generation**  
+**Switch table generation**
 Generate the MAIN macro switch table with jumps from just the interface definition. No more visiting keccak online or using `cast sig xxx` to copy function selectors into your code. Just write the interface and let us handle the rest.
 
 Usage:
